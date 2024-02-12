@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { doc, setDoc } from 'firebase/firestore'
+import { arrayUnion, doc, setDoc, updateDoc } from 'firebase/firestore'
 
 // Lib
 import { ref, uploadBytes } from 'firebase/storage'
@@ -14,13 +14,19 @@ export async function POST (req: Request): Promise<NextResponse> {
   const sizeKB = formatToKB(file.size)
   if (sizeKB > 10000) return NextResponse.json({ error: 'File size is too large' }, { status: 400 })
   const storageRef = ref(storage, file.name)
-  const res = await uploadBytes(storageRef, file)
+  const dataFile = await uploadBytes(storageRef, file)
   const userIdReference = doc(db, 'users', 'nLHaoQrqtO9z58uw31tu')
-  await setDoc(doc(db, 'files', crypto.randomUUID()), {
+  const newFileRef = doc(db, 'files', crypto.randomUUID())
+  await setDoc(newFileRef, {
     name: file.name,
     user_id: userIdReference,
     size: sizeKB,
     createdAt: new Date().toISOString()
   })
-  return NextResponse.json(res)
+  const fileReference = doc(db, 'files', newFileRef.id)
+  await updateDoc(userIdReference, {
+    files: arrayUnion(fileReference)
+  })
+
+  return NextResponse.json(dataFile)
 }
