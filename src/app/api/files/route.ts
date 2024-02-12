@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { arrayUnion, doc, setDoc, updateDoc } from 'firebase/firestore'
+import { arrayUnion, collection, doc, setDoc, updateDoc } from 'firebase/firestore'
 
 // Lib
 import { ref, uploadBytes } from 'firebase/storage'
@@ -19,13 +19,16 @@ export async function POST (req: Request): Promise<NextResponse> {
   const newFileRef = doc(db, 'files', crypto.randomUUID())
   await setDoc(newFileRef, {
     name: file.name,
-    user_id: userIdReference,
     size: sizeKB,
     createdAt: new Date().toISOString()
   })
   const fileReference = doc(db, 'files', newFileRef.id)
   await updateDoc(userIdReference, {
     files: arrayUnion(fileReference)
+  })
+  const newPathRef = doc(collection(db, 'paths'))
+  await setDoc(newPathRef, {
+    file: fileReference
   })
 
   return NextResponse.json(dataFile)
