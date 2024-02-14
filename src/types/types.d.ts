@@ -3,4 +3,5 @@ export interface FileData {
   fileURL: string
   name: string
   size: number
+  link: string
 }

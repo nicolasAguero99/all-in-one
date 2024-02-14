@@ -20,7 +20,8 @@ export async function GET (req: any, { params }: { params: { id: string } }): Pr
       const dataFile = docSnap.data()
       const fileRef = ref(storage, dataFile.name as string)
       const fileURL = await getDownloadURL(fileRef)
-      const fileData = { ...dataFile, fileURL }
+      const link = dataFile.link._key.path.segments[6]
+      const fileData = { ...dataFile, link, fileURL }
       return fileData
     })
   )

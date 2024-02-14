@@ -14,9 +14,9 @@ export async function POST (req: Request): Promise<NextResponse> {
   const sizeKB = formatToKB(file.size)
   if (sizeKB > 10000) return NextResponse.json({ error: 'File size is too large' }, { status: 400 })
   const storageRef = ref(storage, file.name)
-  const dataFile = await uploadBytes(storageRef, file)
+  await uploadBytes(storageRef, file)
   const userIdReference = doc(db, 'users', 'nLHaoQrqtO9z58uw31tu')
-  const newFileRef = doc(db, 'files', crypto.randomUUID())
+  const newFileRef = doc(collection(db, 'files'))
   await setDoc(newFileRef, {
     name: file.name,
     size: sizeKB,
@@ -30,6 +30,11 @@ export async function POST (req: Request): Promise<NextResponse> {
   await setDoc(newPathRef, {
     file: fileReference
   })
+  await updateDoc(fileReference, {
+    link: newPathRef
+  })
 
-  return NextResponse.json(dataFile)
+  const link = newPathRef.id
+
+  return NextResponse.json(link)
 }
