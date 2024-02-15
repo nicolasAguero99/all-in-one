@@ -15,12 +15,9 @@ import { inputFiles } from '@/schema/zod'
 import { type FileData } from '@/types/types'
 import Link from 'next/link'
 
-<<<<<<< HEAD
 // Components
 import UrlForm from '@/components/url-form'
 
-=======
->>>>>>> 1939fb014a062c72e5eb97c99927840d45bb0419
 export default function App (): JSX.Element {
   const [files, setFiles] = useState<FileData[]>([])
   const [link, setLink] = useState('')
@@ -48,18 +45,10 @@ export default function App (): JSX.Element {
     if (navigator.share != null) {
       await navigator.share({
         title: 'Compartir url de archivo',
-<<<<<<< HEAD
         text: '¡Mirá este archivo!',
         url: `/${path}`
       })
     }
-=======
-        text: 'Compartir url de archivo',
-        url: `/${path}`
-      })
-    }
-    console.log('share')
->>>>>>> 1939fb014a062c72e5eb97c99927840d45bb0419
   }
 
   useEffect(() => {
