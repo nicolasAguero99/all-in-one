@@ -43,6 +43,17 @@ export async function uploadFile (file: File, sizeKB: number): Promise<string | 
   return link
 }
 
+export async function addUrls (longUrl: string): Promise<string> {
+  const shortUrl = generateRandomPath()
+  const urlRef = doc(db, 'urls', shortUrl)
+  await setDoc(urlRef, { url: longUrl })
+  const userRef = doc(db, 'users', 'nLHaoQrqtO9z58uw31tu')
+  await updateDoc(userRef, {
+    urls: arrayUnion(urlRef)
+  })
+  return shortUrl
+}
+
 export async function getFiles (userId: string): Promise<DocumentData[] | { error: string, status: number }> {
   const docRef = doc(db, 'users', userId)
   const docSnap = await getDoc(docRef)
@@ -63,4 +74,15 @@ export async function getFiles (userId: string): Promise<DocumentData[] | { erro
     })
   )
   return files
+}
+
+export async function getUrls (userId: string): Promise<DocumentData[] | { error: string, status: number }> {
+  const docRef = doc(db, 'users', userId)
+  const docSnap = await getDoc(docRef)
+  if (!docSnap.exists()) return { error: 'No such document!', status: 404 }
+  const dataUser = docSnap.data()
+  const urls = dataUser.urls.map((url: DocumentData) => {
+    return url._key.path.segments[6]
+  })
+  return urls
 }

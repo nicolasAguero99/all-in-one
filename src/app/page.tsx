@@ -87,7 +87,7 @@ export default function App (): JSX.Element {
           <div>
             <span>¡Listo!</span>
             <p>Link generado:</p>
-            <Link href={`/${link}`}>Link</Link>
+            <Link href={`/f/${link}`}>Link</Link>
           </div>
         }
       </div>
@@ -98,7 +98,7 @@ export default function App (): JSX.Element {
             files.length > 0 &&
             files.map(file => (
               <li key={file.fileURL} className='flex flex-col gap-4'>
-                <Link href={`/${file.link}`}>
+                <Link href={`/f/${file.link}`}>
                   <img className='w-[250px] h-auto object-cover' src={file.fileURL} alt='image' />
                   <span>{file.name}</span>
                   <span>{file.size}</span>

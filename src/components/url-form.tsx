@@ -1,23 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { type z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import Link from 'next/link'
 
 // Schema
 import { inputUrl } from '@/schema/zod'
 
 // Constants
 import { API_URL } from '@/constants/constants'
-import Link from 'next/link'
 
 export default function UrlForm (): JSX.Element {
   const [url, setUrl] = useState('')
+  const [myUrls, setMyUrls] = useState<string[]>([])
+  const userId = 'nLHaoQrqtO9z58uw31tu'
 
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputUrl>>({
     resolver: zodResolver(inputUrl)
   })
+
+  useEffect(() => {
+    const getUrls = async (): Promise<void> => {
+      if (userId == null) return
+      const res = await fetch(`${API_URL}/urls/${userId}`, {
+        method: 'GET'
+      })
+      const data: any[] = await res.json()
+      console.log(data)
+      Array.isArray(data) && setMyUrls(data)
+    }
+
+    void getUrls()
+  }, [])
 
   const onSubmit = async (data: z.infer<typeof inputUrl>): Promise<void> => {
     const { longUrl } = data
@@ -48,6 +64,18 @@ export default function UrlForm (): JSX.Element {
           </div>
         )
       }
+      <div>
+        <h2>Mis urls</h2>
+        <ul>
+          {
+            myUrls.map((url, index) => (
+              <li key={index} className='text-blue-500 underline'>
+                <Link href={`/${url}`} >{url}</Link>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
     </section>
   )
 }
