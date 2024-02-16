@@ -22,6 +22,7 @@ import PdfAdd from '@/components/pdf-add'
 export default function App (): JSX.Element {
   const [files, setFiles] = useState<FileData[]>([])
   const [link, setLink] = useState('')
+  const [fileType, setFileType] = useState('' as string)
   const userId = 'nLHaoQrqtO9z58uw31tu'
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
     resolver: zodResolver(inputFiles)
@@ -39,6 +40,7 @@ export default function App (): JSX.Element {
     })
     const linkToFile: string = await res.json()
     console.log(linkToFile)
+    setFileType(file.type.split('/')[0])
     setLink(linkToFile)
   }
 
@@ -89,7 +91,11 @@ export default function App (): JSX.Element {
           <div>
             <span>¡Listo!</span>
             <p>Link generado:</p>
-            <Link href={`/f/${link}`}>Link</Link>
+            {
+              fileType === 'image'
+                ? <Link href={`/f/${link}`}>Link</Link>
+                : <Link href={`/${link}`}>Link</Link>
+            }
           </div>
         }
       </div>
@@ -98,17 +104,21 @@ export default function App (): JSX.Element {
         <ul className='flex flex-wrap gap-4'>
           {
             files.length > 0 &&
-            files.map(file => (
-              <li key={file.fileURL} className='flex flex-col gap-4'>
-                <Link href={`/f/${file.link}`}>
-                  <img className='w-[250px] h-auto object-cover' src={file.fileURL} alt='image' />
-                  <span>{file.name}</span>
-                  <span>{file.size}</span>
-                  <small>{file.createdAt}</small>
-                </Link>
-                <button onClick={() => { void handleShare(file.link) }}>Share</button>
-              </li>
-            ))
+            files.map(file => {
+              const type = file.type.split('/')[0]
+              const linkType = type === 'image' ? '/f/' : '/'
+              return (
+                <li key={file.fileURL} className='flex flex-col gap-4'>
+                  <Link href={`${linkType}${file.link}`}>
+                    <img className='w-[250px] h-auto object-cover' src={file.fileURL} alt='image' />
+                    <span>{file.name}</span>
+                    <span>{file.size}</span>
+                    <small>{file.createdAt}</small>
+                  </Link>
+                  <button onClick={() => { void handleShare(file.link) }}>Share</button>
+                </li>
+              )
+            })
           }
         </ul>
       </section>
