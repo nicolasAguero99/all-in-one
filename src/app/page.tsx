@@ -17,6 +17,7 @@ import Link from 'next/link'
 
 // Components
 import UrlForm from '@/components/url-form'
+import PdfAdd from '@/components/pdf-add'
 
 export default function App (): JSX.Element {
   const [files, setFiles] = useState<FileData[]>([])
@@ -72,6 +73,7 @@ export default function App (): JSX.Element {
   return (
     <div>
       <h1>React Quick Start</h1>
+      <PdfAdd />
       <section>
         <h2>Acortador url</h2>
         <UrlForm />
