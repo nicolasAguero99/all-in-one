@@ -28,8 +28,8 @@ export default function PathPage ({ params }: { params: { path: string } }): JSX
         const data = docSnap.data()
         const fileReference = doc(db, 'files', data?.file.id as string)
         const fileDoc = await getDoc(fileReference)
-        const fileData = fileDoc.data() as { name: string }
-        const fileRef = ref(storage, fileData.name)
+        const fileData = fileDoc.data() as { fileName: string }
+        const fileRef = ref(storage, fileData.fileName)
         const file = await getDownloadURL(fileRef)
         setFile(file)
         console.log('fileData', file)

@@ -17,12 +17,13 @@ import Link from 'next/link'
 
 // Components
 import UrlForm from '@/components/url-form'
-import PdfAdd from '@/components/pdf-add'
 
 export default function App (): JSX.Element {
   const [files, setFiles] = useState<FileData[]>([])
   const [link, setLink] = useState('')
-  const [fileType, setFileType] = useState('' as string)
+  const [fileType, setFileType] = useState('')
+  const [fileName, setFileName] = useState('')
+
   const userId = 'nLHaoQrqtO9z58uw31tu'
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
     resolver: zodResolver(inputFiles)
@@ -33,7 +34,7 @@ export default function App (): JSX.Element {
     console.log('formData', file)
     const formData = new FormData()
     formData.append('file', file)
-
+    formData.append('name', data.name)
     const res = await fetch(`${API_URL}/files`, {
       method: 'POST',
       body: formData
@@ -42,6 +43,12 @@ export default function App (): JSX.Element {
     console.log(linkToFile)
     setFileType(file.type.split('/')[0])
     setLink(linkToFile)
+  }
+
+  const handleChangeFile = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    if (e.target.files == null) return
+    const file = e.target.files[0]
+    setFileName(file.name)
   }
 
   const handleShare = async (path: string): Promise<void> => {
@@ -75,14 +82,14 @@ export default function App (): JSX.Element {
   return (
     <div>
       <h1>React Quick Start</h1>
-      <PdfAdd />
       <section>
         <h2>Acortador url</h2>
         <UrlForm />
       </section>
       <div>
-        <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data'>
-          <input type='file' accept="*" {...register('file')} />
+        <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-2'>
+          <input type='file' accept="*" {...register('file', { onChange: handleChangeFile })} />
+          <input type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Escribe un nombre'}`} {...register('name')} />
           {errors.file?.message != null && <span>{String(errors.file?.message)}</span>}
           <button type='submit' value='Upload'>Upload</button>
         </form>
@@ -107,10 +114,11 @@ export default function App (): JSX.Element {
             files.map(file => {
               const type = file.type.split('/')[0]
               const linkType = type === 'image' ? '/f/' : '/'
+              const imageType = type === 'image' ? file.fileURL : '/pdf-icon.png'
               return (
                 <li key={file.fileURL} className='flex flex-col gap-4'>
                   <Link href={`${linkType}${file.link}`}>
-                    <img className='w-[250px] h-auto object-cover' src={file.fileURL} alt='image' />
+                    <img className='w-[250px] h-auto object-cover' src={imageType} alt='image' />
                     <span>{file.name}</span>
                     <span>{file.size}</span>
                     <small>{file.createdAt}</small>

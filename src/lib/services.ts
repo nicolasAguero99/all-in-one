@@ -9,7 +9,7 @@ import { db, storage } from '@/lib/firebase'
 // Services
 import { generateRandomPath } from './utils'
 
-export async function uploadFile (file: File, sizeKB: number): Promise<string | { error: string, status: number }> {
+export async function uploadFile (file: File, name: string, sizeKB: number): Promise<string | { error: string, status: number }> {
   if (sizeKB > 10000) return { error: 'File size is too large', status: 400 }
   // Upload file to storage
   const fileName = generateRandomPath(file.name)
@@ -18,7 +18,8 @@ export async function uploadFile (file: File, sizeKB: number): Promise<string | 
   // Add file uploaded to files db
   const newFileRef = doc(collection(db, 'files'))
   await setDoc(newFileRef, {
-    name: fileName,
+    name,
+    fileName,
     size: sizeKB,
     type: file.type,
     createdAt: new Date().toISOString()
@@ -43,7 +44,7 @@ export async function uploadFile (file: File, sizeKB: number): Promise<string | 
   return link
 }
 
-export async function uploadPDF (file: File, sizeKB: number): Promise<string | { error: string, status: number }> {
+export async function uploadPDF (file: File, name: string, sizeKB: number): Promise<string | { error: string, status: number }> {
   if (sizeKB > 10000) return { error: 'File size is too large', status: 400 }
   // Upload file to storage
   const fileName = generateRandomPath(file.name)
@@ -54,6 +55,7 @@ export async function uploadPDF (file: File, sizeKB: number): Promise<string | {
   const newFileRef = doc(collection(db, 'files'))
   await setDoc(newFileRef, {
     url,
+    name,
     size: sizeKB,
     type: file.type,
     createdAt: new Date().toISOString()
@@ -101,7 +103,7 @@ export async function getFiles (userId: string): Promise<DocumentData[] | { erro
       const docSnap = await getDoc(docRef)
       if (!docSnap.exists()) return { error: 'No such document!', status: 404 }
       const dataFile = docSnap.data()
-      const fileRef = ref(storage, dataFile.name as string)
+      const fileRef = ref(storage, dataFile.fileName as string)
       const type = dataFile.type.split('/')[0]
       const fileURL = type === 'image' ? await getDownloadURL(fileRef) : dataFile.url
       const link = dataFile.link._key.path.segments[6]
