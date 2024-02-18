@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type z } from 'zod'
+import Link from 'next/link'
+import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
 
 // Constants
 import { API_URL } from '@/constants/constants'
@@ -12,29 +14,64 @@ import { API_URL } from '@/constants/constants'
 import { inputFiles } from '@/schema/zod'
 
 // Types
-import { type FileData } from '@/types/types'
-import Link from 'next/link'
+import { type UserData, type FileData } from '@/types/types'
 
 // Components
 import UrlForm from '@/components/url-form'
+
+// Lib
+import { app } from '@/lib/firebase'
+
+// Services
+import { getUserDataCookies, setUserDataCookies } from '@/lib/services'
 
 export default function App (): JSX.Element {
   const [files, setFiles] = useState<FileData[]>([])
   const [link, setLink] = useState('')
   const [fileType, setFileType] = useState('')
   const [fileName, setFileName] = useState('')
+  const [user, setUser] = useState<UserData>({ name: '', email: '', photo: '', uid: '' })
 
-  const userId = 'nLHaoQrqtO9z58uw31tu'
+  const auth = getAuth(app)
+  const provider = new GoogleAuthProvider()
+
+  // const userId = 'nLHaoQrqtO9z58uw31tu'
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
     resolver: zodResolver(inputFiles)
   })
 
+  useEffect(() => {
+    const getFiles = async (): Promise<void> => {
+      if (user.uid === '') return
+      const res = await fetch(`${API_URL}/files/${user.uid}`, {
+        method: 'GET'
+      })
+      const data: FileData[] = await res.json()
+      console.log(data)
+      Array.isArray(data) && setFiles(data)
+    }
+
+    void getFiles()
+  }, [user.uid])
+
+  useEffect(() => {
+    const getInitialUserData = async (): Promise<void> => {
+      const data = await getUserDataCookies()
+      console.log('data', data)
+      if (data == null || user.uid !== '') return
+      setUser(data)
+    }
+    void getInitialUserData()
+  }, [])
+
   const onSubmit = async (data: z.infer<typeof inputFiles>): Promise<void> => {
+    if (user.uid === '') return
     const file = data.file[0] as File
     console.log('formData', file)
     const formData = new FormData()
     formData.append('file', file)
     formData.append('name', data.name)
+    formData.append('userId', user.uid)
     const res = await fetch(`${API_URL}/files`, {
       method: 'POST',
       body: formData
@@ -61,30 +98,51 @@ export default function App (): JSX.Element {
     }
   }
 
-  useEffect(() => {
-    const getFiles = async (): Promise<void> => {
-      if (userId == null) return
-      const res = await fetch(`${API_URL}/files/${userId}`, {
-        method: 'GET'
+  const handleLogInGoogle = async (): Promise<void> => {
+    console.log('auth', auth)
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        const credential = GoogleAuthProvider.credentialFromResult(result)
+        console.log('credential', credential)
+        const token = credential?.accessToken
+        console.log('token', token)
+        const userCredentials = result.user
+        console.log('result', result)
+        console.log('userCredentials', userCredentials)
+        const userData = {
+          name: userCredentials.displayName ?? '',
+          email: userCredentials.email ?? '',
+          photo: userCredentials.photoURL ?? '',
+          uid: userCredentials.uid ?? ''
+        }
+        setUser(userData)
+        void setUserDataCookies(userData)
+      }).catch((error) => {
+        console.log('error', error)
+        return error
       })
-      const data: FileData[] = await res.json()
-      console.log(data)
-      Array.isArray(data) && setFiles(data)
-    }
+  }
 
-    void getFiles()
-  }, [])
-
-  useEffect(() => {
-    console.log('files', files)
-  }, [files])
+  const handleLogOut = async (): Promise<void> => {
+    await auth.signOut()
+    setUser({ name: '', email: '', photo: '', uid: '' })
+  }
 
   return (
     <div>
+    {
+      user.name !== ''
+        ? <div className='w-fit flex gap-4 bg-slate-600 text-white items-center m-4 px-4 py-2 rounded-lg'>
+            <img src={user.photo} alt={user.name} className='size-8 rounded-full' />
+            <span>{user.name}</span>
+            <button onClick={handleLogOut}>Cerrar sesión</button>
+          </div>
+        : <button onClick={handleLogInGoogle} className='bg-slate-700 text-white p-2'>Google</button>
+    }
       <h1>React Quick Start</h1>
       <section>
         <h2>Acortador url</h2>
-        <UrlForm />
+        <UrlForm userId={user.uid} />
       </section>
       <div>
         <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-2'>

@@ -1,15 +1,19 @@
 'use server'
 
+import { cookies } from 'next/headers'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { arrayUnion, collection, doc, setDoc, updateDoc, getDoc, type DocumentData } from 'firebase/firestore'
 
 // Lib
 import { db, storage } from '@/lib/firebase'
 
-// Services
+// Utils
 import { generateRandomPath } from './utils'
 
-export async function uploadFile (file: File, name: string, sizeKB: number): Promise<string | { error: string, status: number }> {
+// Types
+import { type UserData } from '@/types/types'
+
+export async function uploadFile (file: File, name: string, userId: string, sizeKB: number): Promise<string | { error: string, status: number }> {
   if (sizeKB > 10000) return { error: 'File size is too large', status: 400 }
   // Upload file to storage
   const fileName = generateRandomPath(file.name)
@@ -25,7 +29,7 @@ export async function uploadFile (file: File, name: string, sizeKB: number): Pro
     createdAt: new Date().toISOString()
   })
   // Add file to user files
-  const userIdReference = doc(db, 'users', 'nLHaoQrqtO9z58uw31tu')
+  const userIdReference = doc(db, 'users', userId)
   const fileReference = doc(db, 'files', newFileRef.id)
   await updateDoc(userIdReference, {
     files: arrayUnion(fileReference)
@@ -44,7 +48,7 @@ export async function uploadFile (file: File, name: string, sizeKB: number): Pro
   return link
 }
 
-export async function uploadPDF (file: File, name: string, sizeKB: number): Promise<string | { error: string, status: number }> {
+export async function uploadPDF (file: File, name: string, userId: string, sizeKB: number): Promise<string | { error: string, status: number }> {
   if (sizeKB > 10000) return { error: 'File size is too large', status: 400 }
   // Upload file to storage
   const fileName = generateRandomPath(file.name)
@@ -61,7 +65,7 @@ export async function uploadPDF (file: File, name: string, sizeKB: number): Prom
     createdAt: new Date().toISOString()
   })
   // Add file to user files
-  const userIdReference = doc(db, 'users', 'nLHaoQrqtO9z58uw31tu')
+  const userIdReference = doc(db, 'users', userId)
   const fileReference = doc(db, 'files', newFileRef.id)
   await updateDoc(userIdReference, {
     files: arrayUnion(fileReference)
@@ -80,11 +84,11 @@ export async function uploadPDF (file: File, name: string, sizeKB: number): Prom
   return link
 }
 
-export async function addUrls (longUrl: string): Promise<string> {
+export async function addUrls (longUrl: string, userId: string): Promise<string> {
   const shortUrl = generateRandomPath()
   const urlRef = doc(db, 'urls', shortUrl)
   await setDoc(urlRef, { url: longUrl })
-  const userRef = doc(db, 'users', 'nLHaoQrqtO9z58uw31tu')
+  const userRef = doc(db, 'users', userId)
   await updateDoc(userRef, {
     urls: arrayUnion(urlRef)
   })
@@ -123,4 +127,18 @@ export async function getUrls (userId: string): Promise<DocumentData[] | { error
     return url._key.path.segments[6]
   })
   return urls
+}
+
+export async function setUserDataCookies (userData: UserData): Promise<void> {
+  const cookiesUser = cookies()
+  const userDataString = JSON.stringify(userData)
+  cookiesUser.set('userData', userDataString)
+}
+
+export async function getUserDataCookies (): Promise<UserData> {
+  const cookiesUser = cookies()
+  const userData = cookiesUser.get('userData')
+  const value = userData?.value ?? ''
+  const data = JSON.parse(value)
+  return data
 }

@@ -21,4 +21,4 @@ const storage = getStorage(app, process.env.STORAGE_BUCKET)
 const db = getFirestore(app)
 // const analytics = getAnalytics(app)
 
-export { storage, db }
+export { storage, db, app }

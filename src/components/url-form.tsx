@@ -12,10 +12,9 @@ import { inputUrl } from '@/schema/zod'
 // Constants
 import { API_URL } from '@/constants/constants'
 
-export default function UrlForm (): JSX.Element {
+export default function UrlForm ({ userId }: { userId: string }): JSX.Element {
   const [url, setUrl] = useState('')
   const [myUrls, setMyUrls] = useState<string[]>([])
-  const userId = 'nLHaoQrqtO9z58uw31tu'
 
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputUrl>>({
     resolver: zodResolver(inputUrl)
@@ -23,7 +22,7 @@ export default function UrlForm (): JSX.Element {
 
   useEffect(() => {
     const getUrls = async (): Promise<void> => {
-      if (userId == null) return
+      if (userId === '') return
       const res = await fetch(`${API_URL}/urls/${userId}`, {
         method: 'GET'
       })
@@ -33,7 +32,7 @@ export default function UrlForm (): JSX.Element {
     }
 
     void getUrls()
-  }, [])
+  }, [userId])
 
   const onSubmit = async (data: z.infer<typeof inputUrl>): Promise<void> => {
     const { longUrl } = data
@@ -42,7 +41,7 @@ export default function UrlForm (): JSX.Element {
 
     const res = await fetch(`${API_URL}/urls`, {
       method: 'POST',
-      body: JSON.stringify({ longUrl })
+      body: JSON.stringify({ longUrl, userId })
     })
     const shortUrl: string = await res.json()
     console.log(shortUrl)
