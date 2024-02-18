@@ -21,8 +21,9 @@ export async function uploadFile (file: File, name: string, userId: string, size
   await uploadBytes(storageRef, file)
   // Add file uploaded to files db
   const newFileRef = doc(collection(db, 'files'))
+  const customName = name === '' ? file.name : name
   await setDoc(newFileRef, {
-    name,
+    name: customName,
     fileName,
     size: sizeKB,
     type: file.type,
@@ -31,6 +32,12 @@ export async function uploadFile (file: File, name: string, userId: string, size
   // Add file to user files
   const userIdReference = doc(db, 'users', userId)
   const fileReference = doc(db, 'files', newFileRef.id)
+  const docSnap = await getDoc(userIdReference)
+  if (!docSnap.exists()) {
+    await setDoc(userIdReference, {
+      created_at: new Date().toISOString()
+    })
+  }
   await updateDoc(userIdReference, {
     files: arrayUnion(fileReference)
   })
@@ -57,9 +64,10 @@ export async function uploadPDF (file: File, name: string, userId: string, sizeK
   const url = await getDownloadURL(storageRef)
   // Add file uploaded to files db
   const newFileRef = doc(collection(db, 'files'))
+  const customName = name === '' ? file.name : name
   await setDoc(newFileRef, {
     url,
-    name,
+    name: customName,
     size: sizeKB,
     type: file.type,
     createdAt: new Date().toISOString()
@@ -67,6 +75,12 @@ export async function uploadPDF (file: File, name: string, userId: string, sizeK
   // Add file to user files
   const userIdReference = doc(db, 'users', userId)
   const fileReference = doc(db, 'files', newFileRef.id)
+  const docSnap = await getDoc(userIdReference)
+  if (!docSnap.exists()) {
+    await setDoc(userIdReference, {
+      created_at: new Date().toISOString()
+    })
+  }
   await updateDoc(userIdReference, {
     files: arrayUnion(fileReference)
   })
@@ -123,6 +137,7 @@ export async function getUrls (userId: string): Promise<DocumentData[] | { error
   const docSnap = await getDoc(docRef)
   if (!docSnap.exists()) return { error: 'No such document!', status: 404 }
   const dataUser = docSnap.data()
+  if (dataUser.urls === undefined) return { error: 'No such document!', status: 404 }
   const urls = dataUser.urls.map((url: DocumentData) => {
     return url._key.path.segments[6]
   })
@@ -138,7 +153,12 @@ export async function setUserDataCookies (userData: UserData): Promise<void> {
 export async function getUserDataCookies (): Promise<UserData> {
   const cookiesUser = cookies()
   const userData = cookiesUser.get('userData')
-  const value = userData?.value ?? ''
-  const data = JSON.parse(value)
+  const value = userData?.value ?? undefined
+  const data = value !== undefined ? JSON.parse(value) : undefined
   return data
+}
+
+export async function deleteUserDataCookies (): Promise<void> {
+  const cookiesUser = cookies()
+  cookiesUser.delete('userData')
 }

@@ -50,16 +50,16 @@ export default function UrlForm ({ userId }: { userId: string }): JSX.Element {
 
   return (
     <section>
-      <form onSubmit={handleSubmit(onSubmit)} method='post'>
-        <input className='bg-slate-200' type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} />
+      <form onSubmit={handleSubmit(onSubmit)} method='post' className='flex flex-wrap gap-2 my-4'>
+        <input className='bg-slate-200 px-4' type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} />
         {errors.longUrl?.message != null && <span>{String(errors.longUrl?.message)}</span>}
-        <button type='submit'>Acortar</button>
+        <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' type='submit'>Acortar</button>
       </form>
       {
         url !== '' && (
           <div>
             <span>Nueva url:</span>
-            <Link href={`/${url}`} >Url</Link>
+            <Link className='underline text-purple-600' href={`/${url}`} >{url}</Link>
           </div>
         )
       }

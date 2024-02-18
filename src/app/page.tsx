@@ -23,7 +23,7 @@ import UrlForm from '@/components/url-form'
 import { app } from '@/lib/firebase'
 
 // Services
-import { getUserDataCookies, setUserDataCookies } from '@/lib/services'
+import { deleteUserDataCookies, getUserDataCookies, setUserDataCookies } from '@/lib/services'
 
 export default function App (): JSX.Element {
   const [files, setFiles] = useState<FileData[]>([])
@@ -58,7 +58,7 @@ export default function App (): JSX.Element {
     const getInitialUserData = async (): Promise<void> => {
       const data = await getUserDataCookies()
       console.log('data', data)
-      if (data == null || user.uid !== '') return
+      if (data === undefined || user.uid !== '') return
       setUser(data)
     }
     void getInitialUserData()
@@ -72,6 +72,7 @@ export default function App (): JSX.Element {
     formData.append('file', file)
     formData.append('name', data.name)
     formData.append('userId', user.uid)
+    console.log('user.uid', user.uid)
     const res = await fetch(`${API_URL}/files`, {
       method: 'POST',
       body: formData
@@ -125,11 +126,12 @@ export default function App (): JSX.Element {
 
   const handleLogOut = async (): Promise<void> => {
     await auth.signOut()
+    await deleteUserDataCookies()
     setUser({ name: '', email: '', photo: '', uid: '' })
   }
 
   return (
-    <div>
+    <div className='px-6'>
     {
       user.name !== ''
         ? <div className='w-fit flex gap-4 bg-slate-600 text-white items-center m-4 px-4 py-2 rounded-lg'>
@@ -139,17 +141,16 @@ export default function App (): JSX.Element {
           </div>
         : <button onClick={handleLogInGoogle} className='bg-slate-700 text-white p-2'>Google</button>
     }
-      <h1>React Quick Start</h1>
       <section>
         <h2>Acortador url</h2>
         <UrlForm userId={user.uid} />
       </section>
       <div>
-        <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-2'>
+        <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-2 my-4'>
           <input type='file' accept="*" {...register('file', { onChange: handleChangeFile })} />
-          <input type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Escribe un nombre'}`} {...register('name')} />
+          <input className='w-[350px] border-2 border-slate-500 px-4' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Escribe un nombre'}`} {...register('name')} />
           {errors.file?.message != null && <span>{String(errors.file?.message)}</span>}
-          <button type='submit' value='Upload'>Upload</button>
+          <button className='bg-blue-400 w-fit px-4 py-2 rounded-lg' type='submit' value='Upload'>Upload</button>
         </form>
         {
           link !== '' &&
@@ -158,8 +159,8 @@ export default function App (): JSX.Element {
             <p>Link generado:</p>
             {
               fileType === 'image'
-                ? <Link href={`/f/${link}`}>Link</Link>
-                : <Link href={`/${link}`}>Link</Link>
+                ? <Link className='underline text-purple-600' href={`/f/${link}`}>{link}</Link>
+                : <Link className='underline text-purple-600' href={`/${link}`}>{link}</Link>
             }
           </div>
         }
@@ -176,7 +177,7 @@ export default function App (): JSX.Element {
               return (
                 <li key={file.fileURL} className='flex flex-col gap-4'>
                   <Link href={`${linkType}${file.link}`}>
-                    <img className='w-[250px] h-auto object-cover' src={imageType} alt='image' />
+                    <img className={`${type === 'image' ? ' w-[250px]' : 'w-[120px]'} h-auto object-cover`} src={imageType} alt='image' />
                     <span>{file.name}</span>
                     <span>{file.size}</span>
                     <small>{file.createdAt}</small>
