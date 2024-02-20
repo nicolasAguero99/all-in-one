@@ -5,9 +5,6 @@ import { NextResponse } from 'next/server'
 import { MERCADO_PAGO_API_KEY } from '@/constants/constants'
 
 export async function POST (req: Request, res: Response): Promise<NextResponse> {
-  console.log('MERCADO_PAGO_API_KEY', MERCADO_PAGO_API_KEY)
-  console.log('process.env.MERCADO_PAGO_PUBLIC_KEY', process.env.MERCADO_PAGO_PUBLIC_KEY)
-  console.log('process.env.NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL)
   const client = new MercadoPagoConfig({ accessToken: String(MERCADO_PAGO_API_KEY) })
   const preference = await new Preference(client).create({
     body: {
