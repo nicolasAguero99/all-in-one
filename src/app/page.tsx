@@ -18,6 +18,7 @@ import { type UserData, type FileData } from '@/types/types'
 
 // Components
 import UrlForm from '@/components/url-form'
+import PaymentBtn from '@/components/payment-btn'
 
 // Lib
 import { app } from '@/lib/firebase'
@@ -30,12 +31,13 @@ export default function App (): JSX.Element {
   const [link, setLink] = useState('')
   const [fileType, setFileType] = useState('')
   const [fileName, setFileName] = useState('')
+  const [tokens, setTokens] = useState<number | null>(null)
   const [user, setUser] = useState<UserData>({ name: '', email: '', photo: '', uid: '' })
+  const [error, setError] = useState('')
 
   const auth = getAuth(app)
   const provider = new GoogleAuthProvider()
 
-  // const userId = 'nLHaoQrqtO9z58uw31tu'
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
     resolver: zodResolver(inputFiles)
   })
@@ -64,7 +66,32 @@ export default function App (): JSX.Element {
     void getInitialUserData()
   }, [])
 
+  useEffect(() => {
+    console.log('error', error)
+  }, [error])
+
+  useEffect(() => {
+    const getTokens = async (): Promise<void> => {
+      if (user.uid === '') return
+      const res = await fetch(`${API_URL}/users/tokens/${user.uid}`, {
+        method: 'GET'
+      })
+      const tokens: number = await res.json()
+      console.log('tokens', tokens)
+      if (tokens === null) return
+      setTokens(tokens)
+      if (Number(tokens) >= 0) {
+        setError('No tienes tokens suficientes')
+      }
+    }
+    void getTokens()
+  }, [user.uid])
+
   const onSubmit = async (data: z.infer<typeof inputFiles>): Promise<void> => {
+    if (Number(tokens) >= 0) {
+      setError('No tienes tokens suficientes')
+      return
+    }
     if (user.uid === '') return
     const file = data.file[0] as File
     console.log('formData', file)
@@ -85,7 +112,7 @@ export default function App (): JSX.Element {
 
   const handleChangeFile = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files == null) return
-    const file = e.target.files[0]
+    const file = e.target.files[0] ?? { name: '' }
     setFileName(file.name)
   }
 
@@ -146,12 +173,27 @@ export default function App (): JSX.Element {
         <UrlForm userId={user.uid} />
       </section>
       <div>
-        <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-2 my-4'>
-          <input type='file' accept="*" {...register('file', { onChange: handleChangeFile })} />
-          <input className='w-[350px] border-2 border-slate-500 px-4' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Escribe un nombre'}`} {...register('name')} />
-          {errors.file?.message != null && <span>{String(errors.file?.message)}</span>}
-          <button className='bg-blue-400 w-fit px-4 py-2 rounded-lg' type='submit' value='Upload'>Upload</button>
-        </form>
+        <div className='flex gap-4'>
+          <span>Tienes {tokens} tokens</span>
+          <PaymentBtn />
+        </div>
+        {
+          Number(tokens) > 0
+            ? <>
+                {
+                  error !== ''
+                    ? <span>{error}</span>
+                    : <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-2 my-4'>
+                      <input type='file' accept="*" {...register('file', { onChange: handleChangeFile })} />
+                      {errors.file?.message != null && <span>{String(errors.file?.message)}</span>}
+                      <input className='w-[350px] border-2 border-slate-500 px-4' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Escribe un nombre'}`} {...register('name')} />
+                      {errors.file?.message != null && <span>{String(errors.name?.message)}</span>}
+                      <button className='bg-blue-400 w-fit px-4 py-2 rounded-lg' type='submit' value='Upload'>Upload</button>
+                    </form>
+                }
+              </>
+            : <span>No tienes tokens suficientes</span>
+        }
         {
           link !== '' &&
           <div>

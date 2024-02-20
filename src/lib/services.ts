@@ -35,11 +35,14 @@ export async function uploadFile (file: File, name: string, userId: string, size
   const docSnap = await getDoc(userIdReference)
   if (!docSnap.exists()) {
     await setDoc(userIdReference, {
+      tokens: 10,
       created_at: new Date().toISOString()
     })
   }
+  const { tokens } = docSnap.data() as { tokens: number }
   await updateDoc(userIdReference, {
-    files: arrayUnion(fileReference)
+    files: arrayUnion(fileReference),
+    tokens: tokens - 1
   })
   // Add file to paths db
   const pathUrl = generateRandomPath()
@@ -78,6 +81,7 @@ export async function uploadPDF (file: File, name: string, userId: string, sizeK
   const docSnap = await getDoc(userIdReference)
   if (!docSnap.exists()) {
     await setDoc(userIdReference, {
+      tokens: 10,
       created_at: new Date().toISOString()
     })
   }
@@ -103,6 +107,13 @@ export async function addUrls (longUrl: string, userId: string): Promise<string>
   const urlRef = doc(db, 'urls', shortUrl)
   await setDoc(urlRef, { url: longUrl })
   const userRef = doc(db, 'users', userId)
+  const docSnap = await getDoc(userRef)
+  if (!docSnap.exists()) {
+    await setDoc(userRef, {
+      tokens: 10,
+      created_at: new Date().toISOString()
+    })
+  }
   await updateDoc(userRef, {
     urls: arrayUnion(urlRef)
   })
@@ -142,6 +153,16 @@ export async function getUrls (userId: string): Promise<DocumentData[] | { error
     return url._key.path.segments[6]
   })
   return urls
+}
+
+export async function getTokensByUser (userId: string): Promise<number | { error: string, status: number }> {
+  const docRef = doc(db, 'users', userId)
+  const docSnap = await getDoc(docRef)
+  if (!docSnap.exists()) return { error: 'No such document!', status: 404 }
+  const dataUser = docSnap.data()
+  if (dataUser.tokens === undefined) return { error: 'No such document!', status: 404 }
+  const tokens = dataUser.tokens
+  return tokens
 }
 
 export async function setUserDataCookies (userData: UserData): Promise<void> {
