@@ -6,6 +6,11 @@ import { MERCADO_PAGO_API_KEY } from '@/constants/constants'
 
 export async function POST (req: Request, res: Response): Promise<NextResponse> {
   const client = new MercadoPagoConfig({ accessToken: String(MERCADO_PAGO_API_KEY) })
+  const { userId } = await req.json()
+  const externalReference = {
+    secret: process.env.MERCADO_PAGO_WEBHOOK_SECRET,
+    userId
+  }
   const preference = await new Preference(client).create({
     body: {
       items: [
@@ -21,11 +26,10 @@ export async function POST (req: Request, res: Response): Promise<NextResponse> 
         failure: 'http://localhost:3000/failure',
         pending: 'http://localhost:3000/pending'
       },
-      auto_return: 'approved'
+      auto_return: 'approved',
+      external_reference: JSON.stringify(externalReference)
     }
   })
-
-  console.log('preference', preference)
 
   return NextResponse.json(preference.sandbox_init_point)
 }

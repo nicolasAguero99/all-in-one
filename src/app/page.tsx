@@ -175,7 +175,7 @@ export default function App (): JSX.Element {
       <div>
         <div className='flex gap-4'>
           <span>Tienes {tokens} tokens</span>
-          <PaymentBtn />
+          <PaymentBtn userId={user.uid} />
         </div>
         {
           Number(tokens) > 0
