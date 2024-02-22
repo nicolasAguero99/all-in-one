@@ -13,20 +13,26 @@ export async function POST (request: NextRequest, res: Response): Promise<NextRe
   const client = new MercadoPagoConfig({ accessToken: String(MERCADO_PAGO_API_KEY) })
   const payment = await new Payment(client).get({ id: body.data.id })
   const status = payment.api_response.status
-  const externalReference = payment.external_reference
-  const { secret, userId }: { secret: string, userId: string } = JSON.parse(String(externalReference))
-  if (secret !== process.env.MERCADO_PAGO_WEBHOOK_SECRET) {
-    return NextResponse.json({ success: false }, { status: 401 })
-  }
+  const rawExternalReference = payment.external_reference
+  const externalReference = String(rawExternalReference).split('_._')
+
+  const getSecret: string = externalReference[0]
+  const userId: string = externalReference[1]
+
   // Add the tokens to user
-  const { quantity }: { quantity: string } = payment.additional_info?.items?.[0] as any
   const userRef = doc(db, 'users', userId)
   const userSnap = await getDoc(userRef)
   if (!userSnap.exists()) return NextResponse.json({ success: false }, { status: 404 })
-  const tokensUser = userSnap.data().tokens
-  const tokens = Number(tokensUser) + Number(quantity)
+  const { tokens, secret } = userSnap.data()
+  if (secret !== getSecret) {
+    return NextResponse.json({ success: false }, { status: 401 })
+  }
+  const { quantity }: { quantity: string } = payment.additional_info?.items?.[0] as any
+
+  const tokensRes = Number(tokens) + Number(quantity)
   await updateDoc(userRef, {
-    tokens
+    tokens: tokensRes,
+    secret: ''
   })
 
   return NextResponse.json({ payment, status })

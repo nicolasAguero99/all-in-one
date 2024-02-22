@@ -9,3 +9,10 @@ export function generateRandomPath (fileName?: string): string {
   const uuid = fileName != null ? `${name}${randomUUID}${currentDate}` : `${randomUUID}${currentDate}`
   return uuid
 }
+
+export function generateSecret (): string {
+  const randomUUID = crypto.randomUUID()
+  const currentDate = new Date().getTime().toString()
+  const secret = `${randomUUID}${currentDate}`
+  return secret
+}
