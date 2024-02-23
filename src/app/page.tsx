@@ -19,6 +19,7 @@ import { type UserData, type FileData } from '@/types/types'
 // Components
 import UrlForm from '@/components/url-form'
 import PaymentBtn from '@/components/payment-btn'
+import PaymentModal from '@/components/payment-modal'
 
 // Lib
 import { app } from '@/lib/firebase'
@@ -159,6 +160,7 @@ export default function App (): JSX.Element {
 
   return (
     <div className='px-6'>
+    <PaymentModal />
     {
       user.name !== ''
         ? <div className='w-fit flex gap-4 bg-slate-600 text-white items-center m-4 px-4 py-2 rounded-lg'>
