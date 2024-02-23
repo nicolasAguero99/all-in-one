@@ -1,11 +1,17 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export default function PaymentModal (): JSX.Element | null {
   const router = useRouter()
   const search = useSearchParams()
-  const isApproved = search.get('success') !== null ? 'success' : search.get('failure') !== null ? 'failure' : null
+  const [isApproved, setIsApproved] = useState<string | null>(null)
+
+  useEffect(() => {
+    const checkApproved = search.get('success') !== null ? 'success' : search.get('failure') !== null ? 'failure' : null
+    setIsApproved(checkApproved)
+  }, [search])
 
   if (isApproved === null) {
     return null
