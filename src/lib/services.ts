@@ -1,8 +1,8 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { arrayUnion, collection, doc, setDoc, updateDoc, getDoc, type DocumentData } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
+import { arrayUnion, collection, doc, setDoc, updateDoc, getDoc, type DocumentData, deleteDoc } from 'firebase/firestore'
 
 // Lib
 import { db, storage } from '@/lib/firebase'
@@ -11,7 +11,16 @@ import { db, storage } from '@/lib/firebase'
 import { generateRandomPath } from './utils'
 
 // Types
-import { type UserData } from '@/types/types'
+import { type UserData, type FileData } from '@/types/types'
+
+// Constants
+import { API_URL } from '@/constants/constants'
+
+export async function getFilesByUser (userId: string): Promise<FileData[]> {
+  const res = await fetch(`${API_URL}/users/${userId}`, { cache: 'no-cache' })
+  const data: FileData[] = await res.json()
+  return data
+}
 
 export async function uploadFile (file: File, name: string, userId: string, sizeKB: number): Promise<string | { error: string, status: number }> {
   if (sizeKB > 10000) return { error: 'File size is too large', status: 400 }
@@ -155,6 +164,34 @@ export async function getUrls (userId: string): Promise<DocumentData[] | { error
   return urls
 }
 
+export async function deleteFile (id: string, userId: string, fileName: string): Promise<unknown | { error: string, status: number }> {
+  const userRef = doc(db, 'users', userId)
+  const pathRef = doc(db, 'paths', id)
+  const imagenRef = ref(storage, fileName)
+  // Get the path's file
+  const pathSnap = await getDoc(pathRef)
+  if (!pathSnap.exists()) return { error: 'No such document!', status: 404 }
+  const data = pathSnap.data()
+  const fileId: string = data.file._key.path.segments[6]
+  const fileRef = doc(db, 'files', fileId)
+  const userSnap = await getDoc(userRef)
+  if (!userSnap.exists()) return { error: 'No such document!', status: 404 }
+  const userData = userSnap.data()
+  const files = userData.files
+  const newFiles = files.filter((file: any) => file._key.path.segments[6] !== fileId)
+  // Delete file and path
+  await updateDoc(userRef, {
+    files: newFiles
+  })
+  await deleteDoc(fileRef)
+  await deleteDoc(pathRef)
+  await deleteObject(imagenRef)
+  // Return one token to user
+  await updateDoc(userRef, {
+    tokens: userData.tokens + 1
+  })
+}
+
 export async function getTokensByUser (userId: string): Promise<number | { error: string, status: number }> {
   const docRef = doc(db, 'users', userId)
   const docSnap = await getDoc(docRef)
@@ -164,6 +201,8 @@ export async function getTokensByUser (userId: string): Promise<number | { error
   const tokens = dataUser.tokens
   return tokens
 }
+
+// Cookies
 
 export async function setUserDataCookies (userData: UserData): Promise<void> {
   const cookiesUser = cookies()

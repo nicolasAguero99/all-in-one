@@ -59,7 +59,7 @@ export default function UrlForm ({ userId }: { userId: string }): JSX.Element {
         url !== '' && (
           <div>
             <span>Nueva url:</span>
-            <Link className='underline text-purple-600' href={`/${url}`} >{url}</Link>
+            <Link className='underline text-blue-600' href={`/${url}`} >{url}</Link>
           </div>
         )
       }

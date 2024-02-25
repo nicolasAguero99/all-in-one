@@ -3,13 +3,18 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-export default function PaymentModal (): JSX.Element | null {
+// Constants
+import { PAYMENT_STATUS } from '@/constants/constants'
+
+export default function PaymentModal ({ paymentStatus }: { paymentStatus: typeof PAYMENT_STATUS[number] }): JSX.Element | null {
   const router = useRouter()
   const search = useSearchParams()
   const [isApproved, setIsApproved] = useState<string | null>(null)
 
   useEffect(() => {
-    const checkApproved = search.get('success') !== null ? 'success' : search.get('failure') !== null ? 'failure' : null
+    const checkApproved = paymentStatus === PAYMENT_STATUS[0] ? PAYMENT_STATUS[0] : paymentStatus === PAYMENT_STATUS[1] ? PAYMENT_STATUS[1] : null
+    console.log('checkApproved', checkApproved)
+
     setIsApproved(checkApproved)
   }, [search])
 
