@@ -7,7 +7,7 @@ export default async function FilesPage (): Promise<JSX.Element> {
   return (
     <div>
       <h1>Files</h1>
-      <FilesUploaded files={data} userId={user.uid} />
+      <FilesUploaded files={data} />
     </div>
   )
 }
