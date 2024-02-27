@@ -1,3 +1,5 @@
+'use client'
+
 import { useRouter } from 'next/navigation'
 import { shallow } from 'zustand/shallow'
 
@@ -7,7 +9,7 @@ import { API_URL } from '@/constants/constants'
 // Store
 import { userStore } from '@/store/userStore'
 
-export default function DeleteFile ({ pathId, fileName }: { pathId: string, fileName: string }): JSX.Element {
+export default function DeleteFile ({ pathId, fileName, type }: { pathId: string, fileName: string, type: string }): JSX.Element {
   const router = useRouter()
   const { user } = userStore((state) => ({
     user: state.user
@@ -20,7 +22,7 @@ export default function DeleteFile ({ pathId, fileName }: { pathId: string, file
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ userId: user.uid, fileName })
+      body: JSON.stringify({ userId: user.uid, fileName, type })
     })
     router.refresh()
   }

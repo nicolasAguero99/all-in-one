@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type z } from 'zod'
-import Link from 'next/link'
 import { shallow } from 'zustand/shallow'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 // Store
 import { userStore } from '@/store/userStore'
@@ -18,9 +19,11 @@ import { inputFiles } from '@/schema/zod'
 import { API_URL } from '@/constants/constants'
 
 export default function FormFiles (): JSX.Element {
+  const router = useRouter()
   const [link, setLink] = useState('')
   const [fileName, setFileName] = useState('')
   const [fileType, setFileType] = useState('')
+  const [uploading, setUploading] = useState(false)
 
   const { error } = errorStore((state) => ({
     error: state.error
@@ -42,6 +45,7 @@ export default function FormFiles (): JSX.Element {
       return
     }
     if (user.uid === '') return
+    setUploading(true)
     const file = data.file[0] as File
     console.log('formData', file)
     const formData = new FormData()
@@ -53,10 +57,17 @@ export default function FormFiles (): JSX.Element {
       method: 'POST',
       body: formData
     })
-    const linkToFile: string = await res.json()
+    const linkToFile: string | { error: string } = await res.json()
+    if (typeof linkToFile === 'object' && linkToFile.error != null) {
+      setError(linkToFile.error)
+      setUploading(false)
+      return
+    }
     console.log(linkToFile)
     setFileType(file.type.split('/')[0])
-    setLink(linkToFile)
+    setLink(String(linkToFile))
+    setUploading(false)
+    router.refresh()
   }
 
   const handleChangeFile = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -71,15 +82,14 @@ export default function FormFiles (): JSX.Element {
         Number(tokens) > 0
           ? <>
               {
-                error !== ''
-                  ? <span>Error: {error}</span>
-                  : <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-2 my-4'>
-                    <input type='file' accept="*" {...register('file', { onChange: handleChangeFile })} />
-                    {errors.file?.message != null && <span>{String(errors.file?.message)}</span>}
-                    <input className='w-[350px] border-2 border-slate-500 px-4' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Escribe un nombre'}`} {...register('name')} />
-                    {errors.file?.message != null && <span>{String(errors.name?.message)}</span>}
-                    <button className='bg-blue-400 w-fit px-4 py-2 rounded-lg' type='submit' value='Upload'>Upload</button>
-                  </form>
+                <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-2 my-4'>
+                  <input type='file' accept="*" {...register('file', { onChange: handleChangeFile })} />
+                  {errors.file?.message != null && <span>{String(errors.file?.message)}</span>}
+                  <input className='w-[350px] border-2 border-slate-500 px-4' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Escribe un nombre'}`} {...register('name')} />
+                  {errors.file?.message != null && <span>{String(errors.name?.message)}</span>}
+                  <button disabled={uploading} className={`${uploading ? 'opacity-50' : ''} bg-blue-400 text-white w-fit px-4 py-2 rounded-lg`} type='submit' value='Upload'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
+                  {error != null && <p className='text-red-600'>{error}</p>}
+                </form>
               }
             </>
           : <span>No tienes tokens suficientes</span>

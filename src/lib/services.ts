@@ -42,12 +42,14 @@ export async function uploadFile (file: File, name: string, userId: string, size
   const userIdReference = doc(db, 'users', userId)
   const fileReference = doc(db, 'files', newFileRef.id)
   const docSnap = await getDoc(userIdReference)
+  // If user doesn't exist, create it
   if (!docSnap.exists()) {
     await setDoc(userIdReference, {
       tokens: 10,
       created_at: new Date().toISOString()
     })
   }
+  // Subtract one token to user
   const { tokens } = docSnap.data() as { tokens: number }
   await updateDoc(userIdReference, {
     files: arrayUnion(fileReference),
@@ -79,6 +81,7 @@ export async function uploadPDF (file: File, name: string, userId: string, sizeK
   const customName = name === '' ? file.name : name
   await setDoc(newFileRef, {
     url,
+    fileName,
     name: customName,
     size: sizeKB,
     type: file.type,
@@ -88,12 +91,19 @@ export async function uploadPDF (file: File, name: string, userId: string, sizeK
   const userIdReference = doc(db, 'users', userId)
   const fileReference = doc(db, 'files', newFileRef.id)
   const docSnap = await getDoc(userIdReference)
+  // If user doesn't exist, create it
   if (!docSnap.exists()) {
     await setDoc(userIdReference, {
       tokens: 10,
       created_at: new Date().toISOString()
     })
   }
+  // Subtract one token to user
+  const { tokens } = docSnap.data() as { tokens: number }
+  await updateDoc(userIdReference, {
+    files: arrayUnion(fileReference),
+    tokens: tokens - 1
+  })
   await updateDoc(userIdReference, {
     files: arrayUnion(fileReference)
   })
@@ -101,7 +111,8 @@ export async function uploadPDF (file: File, name: string, userId: string, sizeK
   const pathUrl = generateRandomPath()
   const newPathRef = doc(db, 'urls', pathUrl)
   await setDoc(newPathRef, {
-    url
+    url,
+    file: fileReference
   })
   // Add that path to file
   await updateDoc(fileReference, {
@@ -134,6 +145,7 @@ export async function getFiles (userId: string): Promise<DocumentData[] | { erro
   const docSnap = await getDoc(docRef)
   if (!docSnap.exists()) return { error: 'No such document!', status: 404 }
   const dataUser = docSnap.data()
+  if (dataUser.files === undefined) return { error: 'No such document!', status: 404 }
   const files: DocumentData[] = await Promise.all(
     dataUser.files.map(async (file: any) => {
       const fileId: string = file._key.path.segments[6]
@@ -145,7 +157,7 @@ export async function getFiles (userId: string): Promise<DocumentData[] | { erro
       const type = dataFile.type.split('/')[0]
       const fileURL = type === 'image' ? await getDownloadURL(fileRef) : dataFile.url
       const link = dataFile.link._key.path.segments[6]
-      const fileData = { ...dataFile, link, fileURL }
+      const fileData = type === 'image' ? { ...dataFile, link, fileURL } : { ...dataFile, link }
       return fileData
     })
   )
@@ -164,15 +176,18 @@ export async function getUrls (userId: string): Promise<DocumentData[] | { error
   return urls
 }
 
-export async function deleteFile (id: string, userId: string, fileName: string): Promise<unknown | { error: string, status: number }> {
+export async function deleteFile (id: string, userId: string, fileName: string, type: string): Promise<unknown | { error: string, status: number }> {
   const userRef = doc(db, 'users', userId)
-  const pathRef = doc(db, 'paths', id)
+  const pathRef = type === 'image' ? doc(db, 'paths', id) : doc(db, 'urls', id)
   const imagenRef = ref(storage, fileName)
   // Get the path's file
   const pathSnap = await getDoc(pathRef)
   if (!pathSnap.exists()) return { error: 'No such document!', status: 404 }
   const data = pathSnap.data()
   const fileId: string = data.file._key.path.segments[6]
+
+  console.log('fileId', fileId)
+
   const fileRef = doc(db, 'files', fileId)
   const userSnap = await getDoc(userRef)
   if (!userSnap.exists()) return { error: 'No such document!', status: 404 }
