@@ -228,7 +228,7 @@ export async function setUserDataCookies (userData: UserData): Promise<void> {
 export async function getUserDataCookies (): Promise<UserData> {
   const cookiesUser = cookies()
   const userData = cookiesUser.get('userData')
-  const value = userData?.value ?? undefined
+  const value = (userData?.value != null && userData?.value !== '') ? userData?.value : undefined
   const data = value !== undefined ? JSON.parse(value) : undefined
   return data
 }

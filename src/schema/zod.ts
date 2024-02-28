@@ -12,3 +12,13 @@ export const inputUrl = z.object({
     message: 'No parece ser una URL válida'
   })
 })
+
+export const inputQuantityTokens = z.object({
+  quantity: z.string().refine(quantity => !isNaN(parseInt(quantity)), {
+    message: 'Debe ser un número'
+  }).refine(quantity => parseInt(quantity) > 0, {
+    message: 'Debe ser mayor a 0'
+  }).refine(quantity => parseInt(quantity) <= 100, {
+    message: 'Debe ser menor o igual a 100'
+  })
+})

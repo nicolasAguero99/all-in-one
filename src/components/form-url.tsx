@@ -5,6 +5,7 @@ import { type z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
+import { shallow } from 'zustand/shallow'
 
 // Schema
 import { inputUrl } from '@/schema/zod'
@@ -12,9 +13,15 @@ import { inputUrl } from '@/schema/zod'
 // Constants
 import { API_URL } from '@/constants/constants'
 
-export default function UrlForm ({ userId }: { userId: string }): JSX.Element {
+// Store
+import { userStore } from '@/store/userStore'
+
+export default function UrlForm (): JSX.Element {
   const [url, setUrl] = useState('')
   const [myUrls, setMyUrls] = useState<string[]>([])
+  const { user } = userStore((state) => ({
+    user: state.user
+  }), shallow)
 
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputUrl>>({
     resolver: zodResolver(inputUrl)
@@ -22,8 +29,8 @@ export default function UrlForm ({ userId }: { userId: string }): JSX.Element {
 
   useEffect(() => {
     const getUrls = async (): Promise<void> => {
-      if (userId === '') return
-      const res = await fetch(`${API_URL}/urls/${userId}`, {
+      if (user.uid === '') return
+      const res = await fetch(`${API_URL}/urls/${user.uid}`, {
         method: 'GET'
       })
       const data: any[] = await res.json()
@@ -32,7 +39,7 @@ export default function UrlForm ({ userId }: { userId: string }): JSX.Element {
     }
 
     void getUrls()
-  }, [userId])
+  }, [user.uid])
 
   const onSubmit = async (data: z.infer<typeof inputUrl>): Promise<void> => {
     const { longUrl } = data
@@ -41,7 +48,7 @@ export default function UrlForm ({ userId }: { userId: string }): JSX.Element {
 
     const res = await fetch(`${API_URL}/urls`, {
       method: 'POST',
-      body: JSON.stringify({ longUrl, userId })
+      body: JSON.stringify({ longUrl, userId: user.uid })
     })
     const shortUrl: string = await res.json()
     console.log(shortUrl)
