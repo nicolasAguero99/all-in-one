@@ -53,7 +53,10 @@ export default function PaymentBtn (): JSX.Element {
       body: JSON.stringify({ userId: user.uid, quantity: Number(quantity) })
     })
     const linkToPay: string = await res.json()
-    console.log('linkToPay', linkToPay)
+    // use localStorage only in the client side
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('quantity', quantity)
+    }
     router.push(linkToPay)
   }
 
@@ -69,7 +72,7 @@ export default function PaymentBtn (): JSX.Element {
             <form onSubmit={handleSubmit(handlePay)}>
               <input className='border-2 border-black/20' type="number" {...register('quantity')} onChange={(e) => { handleChangeQuantity(e) }} />
               {errors.quantity?.message != null && <span className='text-red-600'>{String(errors.quantity?.message)}</span>}
-              <span className='text-gray-500'>$ {priceValue}</span>
+              <span className='text-gray-500'>{Number(priceValue).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 })}</span>
               <button className='bg-blue-600 text-white' type='submit'>Pagar</button>
             </form>
           </div>

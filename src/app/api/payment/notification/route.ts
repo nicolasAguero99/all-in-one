@@ -30,6 +30,7 @@ export async function POST (request: NextRequest, res: Response): Promise<NextRe
   const { quantity }: { quantity: string } = payment.additional_info?.items?.[0] as any
 
   const tokensRes = Number(tokens) + Number(quantity)
+
   await updateDoc(userRef, {
     tokens: tokensRes,
     secret: ''

@@ -15,10 +15,10 @@ export const inputUrl = z.object({
 
 export const inputQuantityTokens = z.object({
   quantity: z.string().refine(quantity => !isNaN(parseInt(quantity)), {
-    message: 'Debe ser un número'
+    message: 'Cantidad inválida, debe ser un número entero'
   }).refine(quantity => parseInt(quantity) > 0, {
-    message: 'Debe ser mayor a 0'
-  }).refine(quantity => parseInt(quantity) <= 100, {
-    message: 'Debe ser menor o igual a 100'
+    message: 'Cantidad mínima de 1 token'
+  }).refine(quantity => parseInt(quantity) <= 50, {
+    message: 'Cantidad máxima de 50 tokens'
   })
 })

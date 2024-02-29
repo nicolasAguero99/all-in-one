@@ -1,6 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+
+// Styles
 import './globals.css'
+
+// Components
+import Nav from '@/components/nav'
+import SwitchServices from '@/components/switch-services'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -15,8 +21,13 @@ export default function RootLayout ({
   children: React.ReactNode
 }>): JSX.Element {
   return (
-    <html lang='en'>
-      <body className={inter.className}>{children}</body>
+    <html lang='es'>
+      <body className={`${inter.className} bg-gray-800 text-white`}>
+        <Nav />
+      <h1 className='text-6xl font-semibold text-center'>All in one</h1>
+        <SwitchServices />
+        {children}
+      </body>
     </html>
   )
 }

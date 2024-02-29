@@ -164,14 +164,14 @@ export async function getFiles (userId: string): Promise<DocumentData[] | { erro
   return files
 }
 
-export async function getUrls (userId: string): Promise<DocumentData[] | { error: string, status: number }> {
+export async function getUrls (userId: string): Promise<string[] | { error: string, status: number }> {
   const docRef = doc(db, 'users', userId)
   const docSnap = await getDoc(docRef)
   if (!docSnap.exists()) return { error: 'No such document!', status: 404 }
   const dataUser = docSnap.data()
   if (dataUser.urls === undefined) return { error: 'No such document!', status: 404 }
   const urls = dataUser.urls.map((url: DocumentData) => {
-    return url._key.path.segments[6]
+    return url._key.path.segments[6] as string
   })
   return urls
 }

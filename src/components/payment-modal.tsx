@@ -1,7 +1,5 @@
-// 'use client'
-
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 // Constants
 import { PAYMENT_STATUS } from '@/constants/constants'
@@ -10,7 +8,7 @@ export default function PaymentModal ({ paymentStatus }: { paymentStatus: typeof
   const router = useRouter()
   const search = useSearchParams()
   const [isApproved, setIsApproved] = useState<string | null>(null)
-
+  const quantity = typeof window !== 'undefined' ? (localStorage.getItem('quantity') != null ? localStorage.getItem('quantity') : null) : null
   useEffect(() => {
     const checkApproved = paymentStatus === PAYMENT_STATUS[0] ? PAYMENT_STATUS[0] : paymentStatus === PAYMENT_STATUS[1] ? PAYMENT_STATUS[1] : null
     console.log('checkApproved', checkApproved)
@@ -23,6 +21,7 @@ export default function PaymentModal ({ paymentStatus }: { paymentStatus: typeof
   }
 
   const handleAccept = (): void => {
+    localStorage.removeItem('quantity')
     router.replace('/')
   }
 
@@ -34,7 +33,11 @@ export default function PaymentModal ({ paymentStatus }: { paymentStatus: typeof
           isApproved === 'success'
             ? <>
                 <h4>¡Pago realizado!</h4>
-                <p>Se han acreditado tus tokens</p>
+                {
+                  quantity != null
+                    ? <p>Se han acreditado <b>{quantity}</b> tokens</p>
+                    : <p>Se han acreditado tus tokens</p>
+                }
               </>
             : <>
                 <h4 className='text-red-600'>¡Pago rechazado!</h4>

@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { type z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -16,9 +17,10 @@ import { API_URL } from '@/constants/constants'
 // Store
 import { userStore } from '@/store/userStore'
 
-export default function UrlForm (): JSX.Element {
+export default function UrlForm ({ urlsUploaded }: { urlsUploaded: string[] }): JSX.Element {
+  const router = useRouter()
   const [url, setUrl] = useState('')
-  const [myUrls, setMyUrls] = useState<string[]>([])
+  // const [myUrls, setMyUrls] = useState<string[]>([])
   const { user } = userStore((state) => ({
     user: state.user
   }), shallow)
@@ -26,20 +28,6 @@ export default function UrlForm (): JSX.Element {
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputUrl>>({
     resolver: zodResolver(inputUrl)
   })
-
-  useEffect(() => {
-    const getUrls = async (): Promise<void> => {
-      if (user.uid === '') return
-      const res = await fetch(`${API_URL}/urls/${user.uid}`, {
-        method: 'GET'
-      })
-      const data: any[] = await res.json()
-      console.log(data)
-      Array.isArray(data) && setMyUrls(data)
-    }
-
-    void getUrls()
-  }, [user.uid])
 
   const onSubmit = async (data: z.infer<typeof inputUrl>): Promise<void> => {
     const { longUrl } = data
@@ -53,11 +41,13 @@ export default function UrlForm (): JSX.Element {
     const shortUrl: string = await res.json()
     console.log(shortUrl)
     setUrl(shortUrl)
+    router.refresh()
   }
 
   return (
-    <section>
-      <form onSubmit={handleSubmit(onSubmit)} method='post' className='flex flex-wrap gap-2 my-4'>
+    <section className='flex flex-col justify-center'>
+      <h2 className='text-4xl text-center'>Acortador url</h2>
+      <form onSubmit={handleSubmit(onSubmit)} method='post' className='flex flex-wrap justify-center gap-2 my-4'>
         <input className='bg-slate-200 px-4' type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} />
         {errors.longUrl?.message != null && <span>{String(errors.longUrl?.message)}</span>}
         <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' type='submit'>Acortar</button>
@@ -74,8 +64,8 @@ export default function UrlForm (): JSX.Element {
         <h2>Mis urls</h2>
         <ul>
           {
-            myUrls.map((url, index) => (
-              <li key={index} className='text-blue-500 underline'>
+            urlsUploaded.map((url, index) => (
+              <li key={index} className='text-sky-200 underline'>
                 <Link href={`/${url}`} >{url}</Link>
               </li>
             ))

@@ -1,3 +1,5 @@
+'use client'
+
 import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
 import { shallow } from 'zustand/shallow'
 
@@ -52,7 +54,7 @@ export default function SignUpOutButton (): JSX.Element {
   return (
     <>
       {
-        user.name !== ''
+        (user != null && user?.name !== '')
           ? <div className='w-fit flex gap-4 bg-slate-600 text-white items-center m-4 px-4 py-2 rounded-lg'>
               <img src={user.photo} alt={user.name} className='size-8 rounded-full' />
               <span>{user.name}</span>

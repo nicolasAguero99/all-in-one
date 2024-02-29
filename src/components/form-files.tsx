@@ -77,7 +77,7 @@ export default function FormFiles (): JSX.Element {
   }
 
   return (
-    <>
+    <section>
       {
         Number(tokens) > 0
           ? <>
@@ -106,6 +106,6 @@ export default function FormFiles (): JSX.Element {
           }
         </div>
       }
-    </>
+    </section>
   )
 }

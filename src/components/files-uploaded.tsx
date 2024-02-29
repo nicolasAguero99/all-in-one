@@ -1,14 +1,19 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 
 // Components
 import DeleteFile from '@/components/delete-file'
+import FormFiles from '@/components/form-files'
 
 // Types
 import { type FileData } from '@/types/types'
 
-export default function FilesUploaded ({ files }: { files: FileData[] }): JSX.Element {
+// Store
+import { userStore } from '@/store/userStore'
+
+export default function FilesUploaded ({ files, tokensLength }: { files: FileData[], tokensLength: number }): JSX.Element {
   const handleShare = async (path: string): Promise<void> => {
     if (navigator.share != null) {
       await navigator.share({
@@ -18,9 +23,16 @@ export default function FilesUploaded ({ files }: { files: FileData[] }): JSX.El
       })
     }
   }
+  const { setTokens } = userStore()
+
+  useEffect(() => {
+    if (tokensLength == null) return
+    setTokens(tokensLength)
+  }, [tokensLength])
 
   return (
     <>
+      <FormFiles />
       <section>
         <h2>Archivos</h2>
         <ul className='flex flex-wrap gap-4'>

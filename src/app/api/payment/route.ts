@@ -15,8 +15,6 @@ export async function POST (req: Request, res: Response): Promise<NextResponse> 
   const client = new MercadoPagoConfig({ accessToken: String(MERCADO_PAGO_API_KEY) })
   const { userId, quantity }: { userId: string, quantity: number } = await req.json()
 
-  console.log('quantity', quantity)
-
   const secret = generateSecret()
   const userRef = doc(db, 'users', userId)
   const userSnap = await getDoc(userRef)
