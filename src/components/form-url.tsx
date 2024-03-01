@@ -17,7 +17,10 @@ import { API_URL } from '@/constants/constants'
 // Store
 import { userStore } from '@/store/userStore'
 
-export default function UrlForm ({ urlsUploaded }: { urlsUploaded: string[] }): JSX.Element {
+// Components
+import ActionButtonsLink from './action-buttons-link'
+
+export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: string, longUrl: string }> }): JSX.Element {
   const router = useRouter()
   const [url, setUrl] = useState('')
   // const [myUrls, setMyUrls] = useState<string[]>([])
@@ -60,18 +63,22 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: string[] }): 
           </div>
         )
       }
-      <div>
+      <section className='flex flex-col items-center gap-4'>
         <h2>Mis urls</h2>
-        <ul>
+        <ul className='flex flex-col gap-10 my-6'>
           {
-            urlsUploaded.map((url, index) => (
-              <li key={index} className='text-sky-200 underline'>
-                <Link href={`/${url}`} >{url}</Link>
+            urlsUploaded.map(eachUrl => (
+              <li key={eachUrl.url} className='flex flex-col gap-2'>
+                <div className='flex justify-between items-center gap-4'>
+                  <Link href={`/${eachUrl.url}`} className='text-sky-200 underline'>{eachUrl.url}</Link>
+                  <ActionButtonsLink url={eachUrl.url} />
+                </div>
+                <small className='text-gray-400 text-sm'>({eachUrl.longUrl})</small>
               </li>
             ))
           }
         </ul>
-      </div>
+      </section>
     </section>
   )
 }

@@ -6,6 +6,10 @@ import { shallow } from 'zustand/shallow'
 // Lib
 import { app } from '@/lib/firebase'
 
+// Icons
+import LogOutIcon from './icons/log-out-icon'
+import GoogleIcon from './icons/google-icon'
+
 // Store
 import { userStore } from '@/store/userStore'
 
@@ -55,12 +59,20 @@ export default function SignUpOutButton (): JSX.Element {
     <>
       {
         (user != null && user?.name !== '')
-          ? <div className='w-fit flex gap-4 bg-slate-600 text-white items-center m-4 px-4 py-2 rounded-lg'>
-              <img src={user.photo} alt={user.name} className='size-8 rounded-full' />
-              <span>{user.name}</span>
-              <button onClick={handleLogOut}>Cerrar sesión</button>
+          ? <div className='w-fit flex items-center gap-8 px-4 py-2 rounded-lg'>
+              <div className='flex gap-4 items-center'>
+                {
+                  user.photo !== '' && <img src={user.photo} alt={user.name} className='size-8 rounded-full' />
+                }
+                <span>{user.name}</span>
+              </div>
+              <button onClick={handleLogOut}><LogOutIcon /></button>
             </div>
-          : <button onClick={handleSignUp} className='bg-slate-700 text-white p-2'>Google</button>
+          : <div className='w-fit flex items-center gap-8 px-4 py-2 rounded-lg'>
+              <button onClick={handleSignUp} className='flex items-center gap-2 bg-blue-600 text-white p-2 rounded-lg'>
+                Iniciar sesión <GoogleIcon />
+              </button>
+            </div>
       }
     </>
   )

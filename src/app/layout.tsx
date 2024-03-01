@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { ToastContainer } from 'react-toastify'
 
 // Styles
 import './globals.css'
+import 'react-toastify/dist/ReactToastify.css'
 
 // Components
 import Nav from '@/components/nav'
@@ -27,6 +29,7 @@ export default function RootLayout ({
       <h1 className='text-6xl font-semibold text-center'>All in one</h1>
         <SwitchServices />
         {children}
+        <ToastContainer />
       </body>
     </html>
   )

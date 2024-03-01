@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers'
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
-import { arrayUnion, collection, doc, setDoc, updateDoc, getDoc, type DocumentData, deleteDoc } from 'firebase/firestore'
+import { arrayUnion, collection, doc, setDoc, updateDoc, getDoc, type DocumentData, deleteDoc, arrayRemove } from 'firebase/firestore'
 
 // Lib
 import { db, storage } from '@/lib/firebase'
@@ -164,15 +164,21 @@ export async function getFiles (userId: string): Promise<DocumentData[] | { erro
   return files
 }
 
-export async function getUrls (userId: string): Promise<string[] | { error: string, status: number }> {
+export async function getUrls (userId: string): Promise<Array<{ url: string, longUrl: string }> | { error: string, status: number }> {
   const docRef = doc(db, 'users', userId)
   const docSnap = await getDoc(docRef)
   if (!docSnap.exists()) return { error: 'No such document!', status: 404 }
   const dataUser = docSnap.data()
   if (dataUser.urls === undefined) return { error: 'No such document!', status: 404 }
-  const urls = dataUser.urls.map((url: DocumentData) => {
-    return url._key.path.segments[6] as string
-  })
+  const urls = await Promise.all(dataUser.urls.map(async (eachUrl: DocumentData) => {
+    const url = eachUrl._key.path.segments[6] as string
+    const urlRef = doc(db, 'urls', url)
+    const urlSnap = await getDoc(urlRef)
+    if (!urlSnap.exists()) return { error: 'No such document!', status: 404 }
+    const urlData = urlSnap.data()
+    const longUrl = urlData.url
+    return { url, longUrl }
+  }))
   return urls
 }
 
@@ -192,11 +198,10 @@ export async function deleteFile (id: string, userId: string, fileName: string, 
   const userSnap = await getDoc(userRef)
   if (!userSnap.exists()) return { error: 'No such document!', status: 404 }
   const userData = userSnap.data()
-  const files = userData.files
-  const newFiles = files.filter((file: any) => file._key.path.segments[6] !== fileId)
+  if (userData.files === undefined || userData.tokens === undefined) return { error: 'No such document!', status: 404 }
   // Delete file and path
   await updateDoc(userRef, {
-    files: newFiles
+    files: arrayRemove(fileRef)
   })
   await deleteDoc(fileRef)
   await deleteDoc(pathRef)
@@ -205,6 +210,20 @@ export async function deleteFile (id: string, userId: string, fileName: string, 
   await updateDoc(userRef, {
     tokens: userData.tokens + 1
   })
+}
+
+export async function deleteUrl (id: string, userId: string): Promise<{ message: string, status: number } | { error: string, status: number }> {
+  const userRef = doc(db, 'users', userId)
+  const urlRef = doc(db, 'urls', id)
+  const docSnap = await getDoc(userRef)
+  if (!docSnap.exists()) {
+    return { error: 'User not found', status: 400 }
+  }
+  await updateDoc(userRef, {
+    urls: arrayRemove(urlRef)
+  })
+  await deleteDoc(urlRef)
+  return { message: 'Url deleted', status: 200 }
 }
 
 export async function getTokensByUser (userId: string): Promise<number | { error: string, status: number }> {

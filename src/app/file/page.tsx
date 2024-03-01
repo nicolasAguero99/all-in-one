@@ -1,5 +1,6 @@
 // Components
 import FilesUploaded from '@/components/files-uploaded'
+
 // Services
 import { getFilesByUser, getTokensByUser, getUserDataCookies } from '@/lib/services'
 
