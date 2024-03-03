@@ -2,6 +2,7 @@
 
 import { shallow } from 'zustand/shallow'
 import { useRouter } from 'next/navigation'
+import { type SetStateAction, type Dispatch } from 'react'
 
 // Constants
 import { API_URL } from '@/constants/constants'
@@ -17,14 +18,15 @@ import { userStore } from '@/store/userStore'
 // Utils
 import { showNotification } from '@/lib/utils'
 
-export default function ActionButtonsLink ({ url }: { url: string }): JSX.Element {
+export default function ActionButtonsLink ({ url, setUrl }: { url: string, setUrl: Dispatch<SetStateAction<string>> }): JSX.Element {
   const router = useRouter()
   const { user } = userStore((state) => ({
     user: state.user
   }), shallow)
 
   const handleCopy = async (): Promise<void> => {
-    await window.navigator.clipboard.writeText(url)
+    const origin = window.location.origin
+    await window.navigator.clipboard.writeText(`${origin}/${url}`)
     showNotification('Link copiado', 'success')
   }
 
@@ -46,6 +48,7 @@ export default function ActionButtonsLink ({ url }: { url: string }): JSX.Elemen
     const data = await res.json()
     if (data.error == null) {
       showNotification('Link eliminado', 'success')
+      setUrl('')
     } else {
       showNotification('Error al eliminar el link', 'error')
     }

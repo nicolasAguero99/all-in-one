@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type z } from 'zod'
 import { shallow } from 'zustand/shallow'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import JSConfetti from 'js-confetti'
 
 // Store
 import { userStore } from '@/store/userStore'
@@ -21,6 +22,7 @@ import { API_URL } from '@/constants/constants'
 export default function FormFiles (): JSX.Element {
   const router = useRouter()
   const [link, setLink] = useState('')
+  const [filePreview, setFilePreview] = useState('')
   const [fileName, setFileName] = useState('')
   const [fileType, setFileType] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -38,6 +40,15 @@ export default function FormFiles (): JSX.Element {
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
     resolver: zodResolver(inputFiles)
   })
+
+  useEffect(() => {
+    if (link === '') return
+    const confetti = async (): Promise<void> => {
+      const jsConfetti = new JSConfetti()
+      await jsConfetti.addConfetti()
+    }
+    void confetti()
+  }, [link])
 
   const onSubmit = async (data: z.infer<typeof inputFiles>): Promise<void> => {
     if (Number(tokens) <= 0) {
@@ -63,6 +74,15 @@ export default function FormFiles (): JSX.Element {
       setUploading(false)
       return
     }
+
+    const reader = new FileReader()
+
+    reader.onloadend = function () {
+      setFilePreview(reader.result as string)
+    }
+
+    reader.readAsDataURL(file)
+
     console.log(linkToFile)
     setFileType(file.type.split('/')[0])
     setLink(String(linkToFile))
@@ -77,7 +97,7 @@ export default function FormFiles (): JSX.Element {
   }
 
   return (
-    <section>
+    <section className='flex flex-col items-center'>
       {
         Number(tokens) > 0
           ? <>
@@ -101,7 +121,10 @@ export default function FormFiles (): JSX.Element {
           <p>Link generado:</p>
           {
             fileType === 'image'
-              ? <Link className='underline text-blue-600' href={`/f/${link}`}>{link}</Link>
+              ? <Link className='underline text-blue-600' href={`/f/${link}`}>
+                  <img className='w-[250px] h-[150px] object-cover rounded-lg my-6' src={filePreview} alt='file uploaded' />
+                  {link}
+                </Link>
               : <Link className='underline text-blue-600' href={`/${link}`}>{link}</Link>
           }
         </div>

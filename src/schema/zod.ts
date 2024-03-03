@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+// Utils
+import { urlNoSpacesCheck } from '@/lib/utils'
+
 export const inputFiles = z.object({
   file: z.any().refine(data => data?.length >= 1, {
     message: 'Archivo requerido'
@@ -10,6 +13,8 @@ export const inputFiles = z.object({
 export const inputUrl = z.object({
   longUrl: z.string().url({
     message: 'No parece ser una URL válida'
+  }).refine(urlNoSpacesCheck, {
+    message: 'La url no puede contener espacios'
   })
 })
 

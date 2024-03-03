@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 // Constants
 import { PAYMENT_STATUS } from '@/constants/constants'
 
-export default function PaymentModal ({ paymentStatus }: { paymentStatus: typeof PAYMENT_STATUS[number] }): JSX.Element | null {
+export default function PaymentModal ({ paymentStatus }: { paymentStatus: typeof PAYMENT_STATUS[number] | null }): JSX.Element | null {
   const router = useRouter()
   const search = useSearchParams()
   const [isApproved, setIsApproved] = useState<string | null>(null)

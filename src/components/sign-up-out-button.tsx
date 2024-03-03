@@ -62,7 +62,7 @@ export default function SignUpOutButton (): JSX.Element {
           ? <div className='w-fit flex items-center gap-8 px-4 py-2 rounded-lg'>
               <div className='flex gap-4 items-center'>
                 {
-                  user.photo !== '' && <img src={user.photo} alt={user.name} className='size-8 rounded-full' />
+                  user.photo !== '' && <img src={user.photo} alt={user.name} className='size-8 rounded-full' referrerPolicy='no-referrer' />
                 }
                 <span>{user.name}</span>
               </div>

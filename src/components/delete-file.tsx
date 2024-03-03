@@ -9,6 +9,9 @@ import { API_URL } from '@/constants/constants'
 // Store
 import { userStore } from '@/store/userStore'
 
+// Icons
+import DeleteIcon from './icons/delete-icon'
+
 export default function DeleteFile ({ pathId, fileName, type }: { pathId: string, fileName: string, type: string }): JSX.Element {
   const router = useRouter()
   const { user } = userStore((state) => ({
@@ -28,6 +31,6 @@ export default function DeleteFile ({ pathId, fileName, type }: { pathId: string
   }
 
   return (
-    <button onClick={handleDelete} className="text-red-600">Delete</button>
+    <button onClick={handleDelete} className="absolute top-4 right-4 [&>svg]:size-7 p-0.5 rounded-lg shadow-md bg-white z-30"><DeleteIcon /></button>
   )
 }
