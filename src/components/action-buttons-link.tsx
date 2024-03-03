@@ -59,7 +59,7 @@ export default function ActionButtonsLink ({ url, setUrl }: { url: string, setUr
     <>
       <div className='flex gap-4'>
         <button onClick={handleCopy}><CopyIcon /></button>
-        <button onClick={handleShare}><ShareIcon /></button>
+        <button onClick={handleShare}><ShareIcon color='ffffff' /></button>
         <button onClick={handleDelete}><DeleteIcon /></button>
       </div>
     </>
