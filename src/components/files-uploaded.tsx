@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+// import { useEffect } from 'react'
 import Link from 'next/link'
 
 // Components
@@ -11,7 +11,7 @@ import FormFiles from '@/components/form-files'
 import { type FileData } from '@/types/types'
 
 // Store
-import { userStore } from '@/store/userStore'
+// import { userStore } from '@/store/userStore'
 
 // Utils
 import { filesSizesToKb, formattedDate } from '@/lib/utils'
@@ -19,7 +19,7 @@ import { filesSizesToKb, formattedDate } from '@/lib/utils'
 // Icons
 import ShareIcon from './icons/share-icon'
 
-export default function FilesUploaded ({ files, tokensLength }: { files: FileData[], tokensLength: number }): JSX.Element {
+export default function FilesUploaded ({ files }: { files: FileData[] }): JSX.Element {
   const handleShare = async (path: string): Promise<void> => {
     if (navigator.share != null) {
       await navigator.share({
@@ -29,12 +29,12 @@ export default function FilesUploaded ({ files, tokensLength }: { files: FileDat
       })
     }
   }
-  const { setTokens } = userStore()
+  // const { setTokens } = userStore()
 
-  useEffect(() => {
-    if (tokensLength == null) return
-    setTokens(tokensLength)
-  }, [tokensLength])
+  // useEffect(() => {
+  //   if (tokensLength == null) return
+  //   setTokens(tokensLength)
+  // }, [tokensLength])
 
   return (
     <>

@@ -37,7 +37,7 @@ export default function FormFiles (): JSX.Element {
     tokens: state.tokens
   }), shallow)
 
-  const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
+  const { register, setValue, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
     resolver: zodResolver(inputFiles)
   })
 
@@ -87,6 +87,8 @@ export default function FormFiles (): JSX.Element {
     setFileType(file.type.split('/')[0])
     setLink(String(linkToFile))
     setUploading(false)
+    setValue('file', '')
+    setValue('name', '')
     router.refresh()
   }
 
@@ -98,22 +100,17 @@ export default function FormFiles (): JSX.Element {
 
   return (
     <section className='flex flex-col items-center'>
-      {
-        Number(tokens) > 0
-          ? <>
-              {
-                <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-2 my-4'>
-                  <input type='file' accept="*" {...register('file', { onChange: handleChangeFile })} />
-                  {errors.file?.message != null && <span>{String(errors.file?.message)}</span>}
-                  <input className='w-[350px] border-2 border-slate-500 px-4' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Escribe un nombre'}`} {...register('name')} />
-                  {errors.file?.message != null && <span>{String(errors.name?.message)}</span>}
-                  <button disabled={uploading} className={`${uploading ? 'opacity-50' : ''} bg-blue-400 text-white w-fit px-4 py-2 rounded-lg`} type='submit' value='Upload'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
-                  {error != null && <p className='text-red-600'>{error}</p>}
-                </form>
-              }
-            </>
-          : <span>No tienes tokens suficientes</span>
-      }
+      <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-2 my-4'>
+        <input type='file' accept="*" {...register('file', { onChange: handleChangeFile })} disabled={uploading || Number(tokens) < 1} />
+        {errors.file?.message != null && <span>{String(errors.file?.message)}</span>}
+        <input className='w-[350px] border-2 border-slate-500 px-4 text-black' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Escribe un nombre'}`} {...register('name')} disabled={uploading || Number(tokens) < 1} />
+        {errors.file?.message != null && <span>{String(errors.name?.message)}</span>}
+        <button disabled={uploading || Number(tokens) < 1} className={`${uploading ? 'opacity-50' : ''} bg-blue-400 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30`} type='submit' value='Upload'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
+        {error != null && <p className='text-red-600'>{error}</p>}
+        {
+          Number(tokens) < 1 && <span className='text-red-600'>No tienes tokens suficientes</span>
+        }
+      </form>
       {
         link !== '' &&
         <div>

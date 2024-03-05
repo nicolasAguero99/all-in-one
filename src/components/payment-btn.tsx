@@ -66,7 +66,11 @@ export default function PaymentBtn (): JSX.Element {
 
   return (
     <div className='flex justify-center items-center gap-4 my-6'>
-      <span>Tienes {tokens} tokens</span>
+      {
+        tokens > 0
+          ? <span>Tienes {tokens} tokens</span>
+          : <span>No tienes tokens</span>
+      }
       <button className='bg-blue-600 py-2 px-4 rounded-lg' onClick={handleOpenModal}>Pagar</button>
       {
         isOpen && (

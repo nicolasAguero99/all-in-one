@@ -22,12 +22,12 @@ export default function SignUpOutButton (): JSX.Element {
   const { user } = userStore((state) => ({
     user: state.user
   }), shallow)
-  const { setUser } = userStore()
+  const { setUser, setTokens } = userStore()
 
   const handleSignUp = async (): Promise<void> => {
     console.log('auth', auth)
     signInWithPopup(auth, provider)
-      .then((result) => {
+      .then(async (result) => {
         const credential = GoogleAuthProvider.credentialFromResult(result)
         console.log('credential', credential)
         const token = credential?.accessToken
@@ -42,7 +42,10 @@ export default function SignUpOutButton (): JSX.Element {
           uid: userCredentials.uid ?? ''
         }
         setUser(userData)
-        void setUserDataCookies(userData)
+        // Check if the user is new
+        const tokensLength = !isNaN(await setUserDataCookies(userData)) ? await setUserDataCookies(userData) : 0
+        console.log('tokensLength', tokensLength)
+        setTokens(tokensLength)
       }).catch((error) => {
         console.log('error', error)
         return error
@@ -53,6 +56,7 @@ export default function SignUpOutButton (): JSX.Element {
     await auth.signOut()
     await deleteUserDataCookies()
     setUser({ name: '', email: '', photo: '', uid: '' })
+    setTokens(0)
   }
 
   return (

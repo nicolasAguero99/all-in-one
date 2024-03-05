@@ -23,9 +23,15 @@ export default function SwitchServices (): JSX.Element {
 
   useEffect(() => {
     const init = async (): Promise<void> => {
-      const user = await getUserDataCookies()
+      const { user } = await getUserDataCookies()
       if (user == null) return
+
+      console.log('useXXXXXXXXXXXXXr', user)
+
       const tokensLength = user != null ? await getTokensByUser(user.uid) : 0
+
+      console.log('tokensLength', tokensLength)
+
       setUser(user)
       setTokens(Number(tokensLength))
     }

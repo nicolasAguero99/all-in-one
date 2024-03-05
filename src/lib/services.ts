@@ -43,12 +43,7 @@ export async function uploadFile (file: File, name: string, userId: string, size
   const fileReference = doc(db, 'files', newFileRef.id)
   const docSnap = await getDoc(userIdReference)
   // If user doesn't exist, create it
-  if (!docSnap.exists()) {
-    await setDoc(userIdReference, {
-      tokens: 10,
-      created_at: new Date().toISOString()
-    })
-  }
+  if (!docSnap.exists()) return { error: 'No such document!', status: 404 }
   // Subtract one token to user
   const { tokens } = docSnap.data() as { tokens: number }
   await updateDoc(userIdReference, {
@@ -126,6 +121,7 @@ export async function addUrls (longUrl: string, userId: string): Promise<string>
   const shortUrl = generateRandomPath()
   const urlRef = doc(db, 'urls', shortUrl)
   await setDoc(urlRef, { url: longUrl })
+  if (userId === '') return shortUrl
   const userRef = doc(db, 'users', userId)
   const docSnap = await getDoc(userRef)
   if (!docSnap.exists()) {
@@ -213,15 +209,16 @@ export async function deleteFile (id: string, userId: string, fileName: string, 
 }
 
 export async function deleteUrl (id: string, userId: string): Promise<{ message: string, status: number } | { error: string, status: number }> {
-  const userRef = doc(db, 'users', userId)
   const urlRef = doc(db, 'urls', id)
-  const docSnap = await getDoc(userRef)
-  if (!docSnap.exists()) {
-    return { error: 'User not found', status: 400 }
+  if (userId !== '') {
+    const userRef = doc(db, 'users', userId)
+    const docSnap = await getDoc(userRef)
+    if (!docSnap.exists()) return { error: 'User not found', status: 400 }
+    await updateDoc(userRef, {
+      urls: arrayRemove(urlRef)
+    })
   }
-  await updateDoc(userRef, {
-    urls: arrayRemove(urlRef)
-  })
+  await removeOneUrlsShortenedCookies(id)
   await deleteDoc(urlRef)
   return { message: 'Url deleted', status: 200 }
 }
@@ -236,20 +233,73 @@ export async function getTokensByUser (userId: string): Promise<number | { error
   return tokens
 }
 
-// Cookies
-
-export async function setUserDataCookies (userData: UserData): Promise<void> {
-  const cookiesUser = cookies()
-  const userDataString = JSON.stringify(userData)
-  cookiesUser.set('userData', userDataString)
+export async function createUser (userId: string): Promise<boolean> {
+  const docRef = doc(db, 'users', userId)
+  const docSnap = await getDoc(docRef)
+  if (docSnap.exists()) return false
+  await setDoc(docRef, {
+    tokens: 10,
+    created_at: new Date().toISOString()
+  })
+  return true
 }
 
-export async function getUserDataCookies (): Promise<UserData> {
+// Cookies
+
+export async function setUserDataCookies (userData: UserData): Promise<number> {
+  const cookiesUser = cookies()
+  const userDataString = JSON.stringify(userData)
+  const { uid } = userData
+  const isNewUser = await createUser(uid)
+  const tokens = isNewUser ? 10 : await getTokensByUser(uid) as number
+  cookiesUser.set('userData', userDataString)
+  return tokens
+}
+
+export async function getUserDataCookies (): Promise<{ user: UserData, tokens: number }> {
   const cookiesUser = cookies()
   const userData = cookiesUser.get('userData')
   const value = (userData?.value != null && userData?.value !== '') ? userData?.value : undefined
-  const data = value !== undefined ? JSON.parse(value) : undefined
-  return data
+  const tokens = value !== undefined ? await getTokensByUser(JSON.parse(value).uid as string) : 0
+  const user: UserData = value !== undefined ? JSON.parse(value) : undefined
+  return { user, tokens: Number(tokens) }
+}
+
+export async function getUrlsShortenedCookies (): Promise<Array<{ url: string, longUrl: string } | undefined>> {
+  const cookiesUrls = cookies()
+  const getUrls: string[] = cookiesUrls.get('shortUrl') != null ? JSON.parse(cookiesUrls.get('shortUrl')?.value as unknown as string) : undefined
+  const allUrls = getUrls !== undefined
+    ? await Promise.all(getUrls.map(async (eachUrl) => {
+      const urlRef = doc(db, 'urls', eachUrl)
+      const urlSnap = await getDoc(urlRef)
+      if (!urlSnap.exists()) return undefined
+      const data = urlSnap.data()
+      const url = data.url as string
+      return { url: eachUrl, longUrl: url }
+    }))
+    : undefined
+
+  return allUrls as Array<{ url: string, longUrl: string }>
+}
+
+export async function addUrlsShortenedCookies (shortUrl: string): Promise<void> {
+  const cookiesUrls = cookies()
+  const getUrls = cookiesUrls.get('shortUrl') != null ? JSON.parse(cookiesUrls.get('shortUrl')?.value as unknown as string) : undefined
+
+  if (getUrls != null) {
+    getUrls.push(shortUrl)
+    cookiesUrls.set('shortUrl', JSON.stringify(getUrls))
+  } else {
+    cookiesUrls.set('shortUrl', JSON.stringify([shortUrl]))
+  }
+}
+
+export async function removeOneUrlsShortenedCookies (shortUrl: string): Promise<void> {
+  const cookiesUrls = cookies()
+  const getUrls = cookiesUrls.get('shortUrl') != null ? JSON.parse(cookiesUrls.get('shortUrl')?.value as unknown as string) : undefined
+  if (getUrls === undefined) return
+  const newUrls = getUrls.filter((url: string) => url !== shortUrl)
+  cookiesUrls.set('shortUrl', JSON.stringify(newUrls))
 }
 
 export async function deleteUserDataCookies (): Promise<void> {

@@ -18,7 +18,10 @@ import { API_URL } from '@/constants/constants'
 import { userStore } from '@/store/userStore'
 
 // Components
-import ActionButtonsLink from './action-buttons-link'
+import ActionButtonsLink from './action-buttons-urls'
+
+// Services
+import { addUrlsShortenedCookies } from '@/lib/services'
 
 // Icons
 import PasteIcon from './icons/paste-icon'
@@ -38,7 +41,6 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
   })
 
   const onSubmit = async (data: z.infer<typeof inputUrl>): Promise<void> => {
-    if (user.uid === '') return
     const { longUrl } = data
     const res = await fetch(`${API_URL}/urls`, {
       method: 'POST',
@@ -46,6 +48,9 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
     })
     const shortUrl: string = await res.json()
     console.log(shortUrl)
+    if (user.uid === '') {
+      await addUrlsShortenedCookies(shortUrl)
+    }
     setUrl(shortUrl)
     router.refresh()
   }
@@ -95,19 +100,23 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
       }
       <section className='flex flex-col items-center gap-4'>
         <h2>Mis urls</h2>
-        <ul className='flex flex-col gap-10 my-6'>
-          {
-            urlsUploaded.map(eachUrl => (
-              <li key={eachUrl.url} className='flex flex-col gap-2'>
-                <div className='flex justify-between items-center gap-4'>
-                  <Link href={`/${eachUrl.url}`} className='text-sky-200 underline'>{eachUrl.url}</Link>
-                  <ActionButtonsLink url={eachUrl.url} setUrl={setUrl} />
-                </div>
-                <small className='text-gray-400 text-sm'>({eachUrl.longUrl})</small>
-              </li>
-            ))
-          }
-        </ul>
+        {
+          urlsUploaded.length > 0
+            ? <ul className='flex flex-col gap-10 my-6'>
+                {
+                  urlsUploaded.map(eachUrl => (
+                    <li key={eachUrl.url} className='flex flex-col gap-2'>
+                      <div className='flex justify-between items-center gap-4'>
+                        <Link href={`/${eachUrl.url}`} className='text-sky-200 underline'>{eachUrl.url}</Link>
+                        <ActionButtonsLink url={eachUrl.url} setUrl={setUrl} />
+                      </div>
+                      <small className='text-gray-400 text-sm'>({eachUrl.longUrl})</small>
+                    </li>
+                  ))
+                }
+              </ul>
+            : <span>No hay links acortados</span>
+        }
       </section>
     </section>
   )
