@@ -87,12 +87,12 @@ export async function uploadPDF (file: File, name: string, userId: string, sizeK
   const fileReference = doc(db, 'files', newFileRef.id)
   const docSnap = await getDoc(userIdReference)
   // If user doesn't exist, create it
-  if (!docSnap.exists()) {
-    await setDoc(userIdReference, {
-      tokens: 10,
-      created_at: new Date().toISOString()
-    })
-  }
+  // if (!docSnap.exists()) {
+  //   await setDoc(userIdReference, {
+  //     tokens: 10,
+  //     created_at: new Date().toISOString()
+  //   })
+  // }
   // Subtract one token to user
   const { tokens } = docSnap.data() as { tokens: number }
   await updateDoc(userIdReference, {
@@ -117,22 +117,29 @@ export async function uploadPDF (file: File, name: string, userId: string, sizeK
   return link
 }
 
-export async function addUrls (longUrl: string, userId: string): Promise<string> {
-  const shortUrl = generateRandomPath()
+export async function addUrls (longUrl: string, userId: string, customUrl: string): Promise<string> {
+  const shortUrl = customUrl !== '' ? customUrl : generateRandomPath()
   const urlRef = doc(db, 'urls', shortUrl)
   await setDoc(urlRef, { url: longUrl })
   if (userId === '') return shortUrl
   const userRef = doc(db, 'users', userId)
-  const docSnap = await getDoc(userRef)
-  if (!docSnap.exists()) {
-    await setDoc(userRef, {
-      tokens: 10,
-      created_at: new Date().toISOString()
-    })
-  }
+  // if (!docSnap.exists()) {
+  //   await setDoc(userRef, {
+  //     tokens: 10,
+  //     created_at: new Date().toISOString()
+  //   })
+  // }
   await updateDoc(userRef, {
     urls: arrayUnion(urlRef)
   })
+  if (customUrl !== '') {
+    // Subtract one token to user
+    const docSnap = await getDoc(userRef)
+    const { tokens } = docSnap.data() as { tokens: number }
+    await updateDoc(userRef, {
+      tokens: tokens - 1
+    })
+  }
   return shortUrl
 }
 
@@ -242,6 +249,12 @@ export async function createUser (userId: string): Promise<boolean> {
     created_at: new Date().toISOString()
   })
   return true
+}
+
+export async function isExistUrl (url: string): Promise<boolean> {
+  const urlRef = doc(db, 'urls', url)
+  const urlSnap = await getDoc(urlRef)
+  return !urlSnap.exists()
 }
 
 // Cookies

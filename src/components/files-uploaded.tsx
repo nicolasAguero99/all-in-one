@@ -6,12 +6,10 @@ import Link from 'next/link'
 // Components
 import DeleteFile from '@/components/delete-file'
 import FormFiles from '@/components/form-files'
+import PaymentBtn from '@/components/payment-btn'
 
 // Types
 import { type FileData } from '@/types/types'
-
-// Store
-// import { userStore } from '@/store/userStore'
 
 // Utils
 import { filesSizesToKb, formattedDate } from '@/lib/utils'
@@ -29,18 +27,14 @@ export default function FilesUploaded ({ files }: { files: FileData[] }): JSX.El
       })
     }
   }
-  // const { setTokens } = userStore()
-
-  // useEffect(() => {
-  //   if (tokensLength == null) return
-  //   setTokens(tokensLength)
-  // }, [tokensLength])
 
   return (
-    <>
+    <main className='flex flex-col gap-4'>
+      <h1 className='text-6xl font-semibold text-center'>Subir archivos</h1>
+      <PaymentBtn />
       <FormFiles />
-      <section>
-        <h2>Archivos</h2>
+      <section className='flex flex-col items-center'>
+        <h2 className='my-6'>Archivos</h2>
         <ul className='flex flex-wrap justify-center items-center gap-4 px-16'>
           {
             files.length > 0
@@ -74,6 +68,6 @@ export default function FilesUploaded ({ files }: { files: FileData[] }): JSX.El
           }
         </ul>
       </section>
-    </>
+    </main>
   )
 }

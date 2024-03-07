@@ -11,7 +11,8 @@ export default function MainPage ({ searchParamsValue = null, urlsUploaded }: { 
   const paymentStatus = searchParamsValue != null ? searchParamsValue.paymentStatus : null
 
   return (
-    <main className='flex flex-col justify-center px-6'>
+    <main className='flex flex-col justify-center gap-2 px-6'>
+      <h1 className='text-6xl font-semibold text-center'>Acortador de url</h1>
       <PaymentModal paymentStatus={paymentStatus} />
       <UrlForm urlsUploaded={urlsUploaded} />
     </main>

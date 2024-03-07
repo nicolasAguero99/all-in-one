@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { type z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -19,9 +19,10 @@ import { userStore } from '@/store/userStore'
 
 // Components
 import ActionButtonsLink from './action-buttons-urls'
+import PaymentBtn from './payment-btn'
 
 // Services
-import { addUrlsShortenedCookies } from '@/lib/services'
+import { addUrlsShortenedCookies, isExistUrl } from '@/lib/services'
 
 // Icons
 import PasteIcon from './icons/paste-icon'
@@ -32,6 +33,11 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
   const [url, setUrl] = useState('')
   const [isPasted, setIsPasted] = useState(false)
   const [clearEnabled, setClearEnabled] = useState(false)
+  const [currentOrigin, setCurrentOrigin] = useState('')
+  const [customUrl, setCustomUrl] = useState('')
+  const [enabledCustomUrl, setEnabledCustomUrl] = useState(false)
+  const [isValidateCustomUrl, setIsValidateCustomUrl] = useState(false)
+
   const { user } = userStore((state) => ({
     user: state.user
   }), shallow)
@@ -40,11 +46,16 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
     resolver: zodResolver(inputUrl)
   })
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setCurrentOrigin(window.location.origin)
+  }, [])
+
   const onSubmit = async (data: z.infer<typeof inputUrl>): Promise<void> => {
     const { longUrl } = data
     const res = await fetch(`${API_URL}/urls`, {
       method: 'POST',
-      body: JSON.stringify({ longUrl, userId: user.uid })
+      body: JSON.stringify({ longUrl, userId: user.uid, customUrl })
     })
     const shortUrl: string = await res.json()
     console.log(shortUrl)
@@ -59,6 +70,18 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
     e.target.value === '' ? setClearEnabled(false) : setClearEnabled(true)
   }
 
+  const handleCheckCustomUrl = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    e.target.checked ? setEnabledCustomUrl(true) : setEnabledCustomUrl(false)
+  }
+
+  const handleCustomUrl = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    if (e.target.value.length > 20) return
+    setCustomUrl(e.target.value)
+    if (e.target.value === '') return
+    const isValid = await isExistUrl(e.target.value)
+    setIsValidateCustomUrl(isValid)
+  }
+
   const handlePaste = async (): Promise<void> => {
     const text = await navigator.clipboard.readText()
     setValue('longUrl', text)
@@ -70,25 +93,45 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
 
   const handleClear = (): void => {
     setValue('longUrl', '')
+    setValue('customUrl', '')
     setClearEnabled(false)
   }
 
   return (
     <section className='flex flex-col justify-center'>
-      <h2 className='text-4xl text-center'>Acortador url</h2>
-      <form onSubmit={handleSubmit(onSubmit)} method='post' className='flex flex-col justify-center items-center gap-2 my-4'>
+      <PaymentBtn />
+      <form onSubmit={handleSubmit(onSubmit)} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
         <div className='flex gap-4'>
           <div className='relative'>
-            <input className={`${clearEnabled ? 'ps-10' : 'ps-4'} pe-10 bg-slate-200 text-black py-2 rounded-lg transition-all ease-out duration-300`} type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} onChange={handleType} />
+            <input className={`${clearEnabled ? 'ps-10' : 'ps-4'} shadow-md relative pe-10 bg-slate-200 text-black py-2 rounded-lg transition-all ease-out duration-300 z-20`} type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} onChange={handleType} />
+            <div className={`${clearEnabled ? 'top-7 opacity-100' : 'top-0 opacity-0'} absolute right-0 flex transition-all ease-out duration-300`}>
+              <div className='relative'>
+                <input className='absolute top-5 left-[10px] size-4 shadow-lg z-30' type="checkbox" onChange={handleCheckCustomUrl} />
+                <input className='shadow-md relative w-full flex-1 h-full px-10 bg-slate-200 text-black pt-4 pb-2 rounded-b-lg transition-all ease-out duration-300 z-10 disabled:opacity-50' type='text' placeholder='Url personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
+              </div>
+            </div>
             {
               clearEnabled
-                ? <button onClick={handleClear} className='absolute top-[6px] left-1 text-white' type='button'><CrossIcon /></button>
-                : <button onClick={handlePaste} className='absolute top-[5px] right-1 text-white' type='button'><PasteIcon isPasted={isPasted} /></button>
+                ? <button onClick={handleClear} className='absolute top-[6px] left-1 text-white z-30' type='button'><CrossIcon /></button>
+                : <button onClick={handlePaste} className='absolute top-[5px] right-1 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
             }
           </div>
           <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' type='submit'>Acortar</button>
         </div>
-        {errors.longUrl?.message != null && <span className='text-red-600'>{String(errors.longUrl?.message)}</span>}
+        <div className='flex flex-col justify-center items-center mt-10'>
+          {errors.longUrl?.message != null && <span className='text-red-600'>{String(errors.longUrl?.message)}</span>}
+          {
+            enabledCustomUrl && <div className='flex flex-col justify-center items-center text-lg'>
+              <div className={`${isValidateCustomUrl ? 'text-green-500' : 'text-red-500'} flex items-center`}>
+                <small>{currentOrigin}/</small><span>{customUrl}</span>
+              </div>
+              {
+                (!isValidateCustomUrl && customUrl !== '') && <span className='text-sm text-red-500'>Url no disponible</span>
+              }
+              {errors.customUrl?.message != null && <span className='text-red-600'>{String(errors.customUrl?.message)}</span>}
+            </div>
+          }
+        </div>
       </form>
       {
         url !== '' && (

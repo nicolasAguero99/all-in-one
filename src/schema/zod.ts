@@ -15,6 +15,11 @@ export const inputUrl = z.object({
     message: 'No parece ser una URL válida'
   }).refine(urlNoSpacesCheck, {
     message: 'La url no puede contener espacios'
+  }),
+  customUrl: z.string().optional().refine((customUrl: string | undefined) => customUrl === undefined || urlNoSpacesCheck(customUrl), {
+    message: 'La URL no puede contener espacios'
+  }).refine(customUrl => customUrl === undefined || (String(customUrl).length >= 4 && String(customUrl).length <= 20), {
+    message: 'La URL personalizada debe tener entre 4 y 20 caracteres'
   })
 })
 
