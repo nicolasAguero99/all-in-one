@@ -27,6 +27,7 @@ import { addUrlsShortenedCookies, isExistUrl } from '@/lib/services'
 // Icons
 import PasteIcon from './icons/paste-icon'
 import CrossIcon from './icons/cross-icon'
+import { showNotification } from '@/lib/utils'
 
 export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: string, longUrl: string }> }): JSX.Element {
   const router = useRouter()
@@ -37,12 +38,14 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
   const [customUrl, setCustomUrl] = useState('')
   const [enabledCustomUrl, setEnabledCustomUrl] = useState(false)
   const [isValidateCustomUrl, setIsValidateCustomUrl] = useState(false)
+  const [showModalConfirm, setShowModalConfirm] = useState(false)
+  const [isUploading, setUploading] = useState(false)
 
   const { user } = userStore((state) => ({
     user: state.user
   }), shallow)
 
-  const { register, setValue, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputUrl>>({
+  const { register, setValue, getValues, handleSubmit, setError, formState: { errors } } = useForm<z.infer<typeof inputUrl>>({
     resolver: zodResolver(inputUrl)
   })
 
@@ -51,19 +54,47 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
     setCurrentOrigin(window.location.origin)
   }, [])
 
+  useEffect(() => {
+    if (errors.longUrl?.message != null) setShowModalConfirm(false)
+  }, [errors.longUrl?.message])
+
   const onSubmit = async (data: z.infer<typeof inputUrl>): Promise<void> => {
+    setShowModalConfirm(false)
+    setUploading(true)
     const { longUrl } = data
     const res = await fetch(`${API_URL}/urls`, {
       method: 'POST',
       body: JSON.stringify({ longUrl, userId: user.uid, customUrl })
     })
+    if (res.status === 400) {
+      const { error } = await res.json() as { error: string } ?? { error: 'Ha ocurrido un error' }
+      showNotification(error, 'error')
+      setUploading(false)
+      return
+    }
     const shortUrl: string = await res.json()
     console.log(shortUrl)
     if (user.uid === '') {
       await addUrlsShortenedCookies(shortUrl)
     }
     setUrl(shortUrl)
+    setUploading(false)
     router.refresh()
+  }
+
+  const handleShowModal = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault()
+    if (!isValidateCustomUrl && enabledCustomUrl) return
+    setShowModalConfirm(true)
+    const url = getValues('longUrl')
+    try {
+      inputUrl.parse({ longUrl: url })
+      if (errors.longUrl?.message != null) setError('longUrl', { message: '' })
+    } catch (error) {
+      const { message } = (error as { errors: [{ message: string }] }).errors[0] ?? { message: 'Ha ocurrido un error' }
+      setError('longUrl', { message })
+      setShowModalConfirm(false)
+    }
   }
 
   const handleType = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -100,13 +131,29 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
   return (
     <section className='flex flex-col justify-center'>
       <PaymentBtn />
-      <form onSubmit={handleSubmit(onSubmit)} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
+      {
+        showModalConfirm &&
+        <>
+          <div onClick={() => { setShowModalConfirm(false) }} className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-40 cursor-pointer' />
+          <div className='absolute inset-0 w-1/2 h-fit m-auto flex flex-col items-center gap-6 py-8 bg-slate-500 rounded-lg z-50'>
+            <div className='flex flex-col gap-6 items-center'>
+              <span className='text-3xl font-semibold'>Acortar url</span>
+            <p className='text-white/60'>¿Estás seguro de acortar la url? {(enabledCustomUrl && customUrl !== '') && 'Gastarás 1 token'}</p>
+            </div>
+            <div className='flex justify-between items-center gap-4'>
+              <button className='text-blue-600 bg-white w-fit px-4 py-2 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Cancelar</button>
+              <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={handleSubmit(onSubmit)}>Aceptar</button>
+            </div>
+          </div>
+        </>
+      }
+      <form onSubmit={handleShowModal} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
         <div className='flex gap-4'>
           <div className='relative'>
             <input className={`${clearEnabled ? 'ps-10' : 'ps-4'} shadow-md relative pe-10 bg-slate-200 text-black py-2 rounded-lg transition-all ease-out duration-300 z-20`} type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} onChange={handleType} />
             <div className={`${clearEnabled ? 'top-7 opacity-100' : 'top-0 opacity-0'} absolute right-0 flex transition-all ease-out duration-300`}>
               <div className='relative'>
-                <input className='absolute top-5 left-[10px] size-4 shadow-lg z-30' type="checkbox" onChange={handleCheckCustomUrl} />
+                <input className='absolute top-5 left-[10px] size-4 shadow-lg z-30 cursor-pointer' type="checkbox" onChange={handleCheckCustomUrl} />
                 <input className='shadow-md relative w-full flex-1 h-full px-10 bg-slate-200 text-black pt-4 pb-2 rounded-b-lg transition-all ease-out duration-300 z-10 disabled:opacity-50' type='text' placeholder='Url personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
               </div>
             </div>
@@ -116,7 +163,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
                 : <button onClick={handlePaste} className='absolute top-[5px] right-1 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
             }
           </div>
-          <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' type='submit'>Acortar</button>
+          <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading}>{!isUploading ? 'Acortar' : 'Acortando...'}</button>
         </div>
         <div className='flex flex-col justify-center items-center mt-10'>
           {errors.longUrl?.message != null && <span className='text-red-600'>{String(errors.longUrl?.message)}</span>}
