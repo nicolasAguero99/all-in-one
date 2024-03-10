@@ -22,7 +22,7 @@ export async function getFilesByUser (userId: string): Promise<FileData[]> {
   return data
 }
 
-export async function uploadFile (file: File, name: string, userId: string, sizeKB: number): Promise<string | { error: string, status: number }> {
+export async function uploadFile (file: File, name: string, userId: string, sizeKB: number, customUrl: string): Promise<string | { error: string, status: number }> {
   if (sizeKB > 10000) return { error: 'File size is too large', status: 400 }
   // Upload file to storage
   const fileName = generateRandomPath(file.name)
@@ -51,7 +51,7 @@ export async function uploadFile (file: File, name: string, userId: string, size
     tokens: tokens - 1
   })
   // Add file to paths db
-  const pathUrl = generateRandomPath()
+  const pathUrl = customUrl !== '' ? customUrl : generateRandomPath()
   const newPathRef = doc(db, 'paths', pathUrl)
   await setDoc(newPathRef, {
     file: fileReference
@@ -64,7 +64,7 @@ export async function uploadFile (file: File, name: string, userId: string, size
   return link
 }
 
-export async function uploadPDF (file: File, name: string, userId: string, sizeKB: number): Promise<string | { error: string, status: number }> {
+export async function uploadPDF (file: File, name: string, userId: string, sizeKB: number, customUrl: string): Promise<string | { error: string, status: number }> {
   if (sizeKB > 10000) return { error: 'File size is too large', status: 400 }
   // Upload file to storage
   const fileName = generateRandomPath(file.name)
@@ -103,7 +103,7 @@ export async function uploadPDF (file: File, name: string, userId: string, sizeK
     files: arrayUnion(fileReference)
   })
   // Add file to paths db
-  const pathUrl = generateRandomPath()
+  const pathUrl = customUrl !== '' ? customUrl : generateRandomPath()
   const newPathRef = doc(db, 'urls', pathUrl)
   await setDoc(newPathRef, {
     url,

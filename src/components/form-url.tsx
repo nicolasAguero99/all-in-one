@@ -37,7 +37,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
   const [currentOrigin, setCurrentOrigin] = useState('')
   const [customUrl, setCustomUrl] = useState('')
   const [enabledCustomUrl, setEnabledCustomUrl] = useState(false)
-  const [isValidateCustomUrl, setIsValidateCustomUrl] = useState(false)
+  const [isValidateCustomUrl, setIsValidateCustomUrl] = useState<boolean | 'pending'>(false)
   const [showModalConfirm, setShowModalConfirm] = useState(false)
   const [isUploading, setUploading] = useState(false)
 
@@ -84,7 +84,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
 
   const handleShowModal = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
-    if (!isValidateCustomUrl && enabledCustomUrl) return
+    if (isValidateCustomUrl === false && enabledCustomUrl) return
     setShowModalConfirm(true)
     const url = getValues('longUrl')
     try {
@@ -106,6 +106,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
   }
 
   const handleCustomUrl = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    setIsValidateCustomUrl('pending')
     if (e.target.value.length > 20) return
     setCustomUrl(e.target.value)
     if (e.target.value === '') return
@@ -136,18 +137,32 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
         <>
           <div onClick={() => { setShowModalConfirm(false) }} className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-40 cursor-pointer' />
           <div className='absolute inset-0 w-1/2 h-fit m-auto flex flex-col items-center gap-6 py-8 bg-slate-500 rounded-lg z-50'>
-            <div className='flex flex-col gap-6 items-center'>
-              <span className='text-3xl font-semibold'>Acortar url</span>
-            <p className='text-white/60'>¿Estás seguro de acortar la url? {(enabledCustomUrl && customUrl !== '') && 'Gastarás 1 token'}</p>
-            </div>
-            <div className='flex justify-between items-center gap-4'>
-              <button className='text-blue-600 bg-white w-fit px-4 py-2 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Cancelar</button>
-              <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={handleSubmit(onSubmit)}>Aceptar</button>
-            </div>
+            {
+              user.uid !== ''
+                ? <>
+                    <div className='flex flex-col gap-6 items-center'>
+                      <span className='text-3xl font-semibold'>Acortar url</span>
+                      <p className='text-white/60'>¿Estás seguro de acortar la url? {(enabledCustomUrl && customUrl !== '') && 'Gastarás 1 token'}</p>
+                    </div>
+                    <div className='flex justify-between items-center gap-4'>
+                      <button className='text-blue-600 bg-white w-fit px-4 py-2 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Cancelar</button>
+                      <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={handleSubmit(onSubmit)}>Aceptar</button>
+                    </div>
+                  </>
+                : <>
+                  <div className='flex flex-col gap-6 items-center'>
+                    <span className='text-3xl font-semibold'>Iniciar sesión</span>
+                    <p className='text-white/60'>Para realizar esta operación debes iniciar sesión y obtener tokens</p>
+                    </div>
+                    <div className='flex justify-between items-center gap-4'>
+                      <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Aceptar</button>
+                    </div>
+                  </>
+            }
           </div>
         </>
       }
-      <form onSubmit={handleShowModal} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
+      <form onSubmit={(!enabledCustomUrl && customUrl === '') ? handleSubmit(onSubmit) : handleShowModal} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
         <div className='flex gap-4'>
           <div className='relative'>
             <input className={`${clearEnabled ? 'ps-10' : 'ps-4'} shadow-md relative pe-10 bg-slate-200 text-black py-2 rounded-lg transition-all ease-out duration-300 z-20`} type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} onChange={handleType} />
@@ -163,17 +178,17 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
                 : <button onClick={handlePaste} className='absolute top-[5px] right-1 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
             }
           </div>
-          <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading}>{!isUploading ? 'Acortar' : 'Acortando...'}</button>
+          <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}>{!isUploading ? 'Acortar' : 'Acortando...'}</button>
         </div>
         <div className='flex flex-col justify-center items-center mt-10'>
           {errors.longUrl?.message != null && <span className='text-red-600'>{String(errors.longUrl?.message)}</span>}
           {
             enabledCustomUrl && <div className='flex flex-col justify-center items-center text-lg'>
-              <div className={`${isValidateCustomUrl ? 'text-green-500' : 'text-red-500'} flex items-center`}>
+              <div className={`${isValidateCustomUrl === true ? 'text-green-500' : 'text-red-500'} flex items-center`}>
                 <small>{currentOrigin}/</small><span>{customUrl}</span>
               </div>
               {
-                (!isValidateCustomUrl && customUrl !== '') && <span className='text-sm text-red-500'>Url no disponible</span>
+                (isValidateCustomUrl === false && customUrl !== '') && <span className='text-sm text-red-500'>Url no disponible</span>
               }
               {errors.customUrl?.message != null && <span className='text-red-600'>{String(errors.customUrl?.message)}</span>}
             </div>
