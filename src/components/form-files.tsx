@@ -25,6 +25,9 @@ import CrossIcon from './icons/cross-icon'
 // Services
 import { isExistUrl } from '@/lib/services'
 
+// Types
+import { TypesServices } from '@/types/types.d'
+
 export default function FormFiles (): JSX.Element {
   const router = useRouter()
   const [link, setLink] = useState('')
@@ -36,6 +39,7 @@ export default function FormFiles (): JSX.Element {
   const [customUrl, setCustomUrl] = useState('')
   const [enabledCustomUrl, setEnabledCustomUrl] = useState(false)
   const [isValidateCustomUrl, setIsValidateCustomUrl] = useState<boolean | 'pending'>(false)
+  const [showModalConfirm, setShowModalConfirm] = useState(false)
 
   const { error } = errorStore((state) => ({
     error: state.error
@@ -47,7 +51,7 @@ export default function FormFiles (): JSX.Element {
     tokens: state.tokens
   }), shallow)
 
-  const { register, setValue, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
+  const { register, setValue, getValues, setError: setErrors, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
     resolver: zodResolver(inputFiles)
   })
 
@@ -66,6 +70,7 @@ export default function FormFiles (): JSX.Element {
   }, [link])
 
   const onSubmit = async (data: z.infer<typeof inputFiles>): Promise<void> => {
+    setShowModalConfirm(false)
     if (Number(tokens) <= 0) {
       setError('No tienes tokens suficientes')
       return
@@ -76,7 +81,7 @@ export default function FormFiles (): JSX.Element {
     console.log('formData', file)
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('name', data.name)
+    formData.append('name', data.name.trim())
     formData.append('userId', user.uid)
     enabledCustomUrl && formData.append('customUrl', customUrl)
     console.log('user.uid', user.uid)
@@ -108,6 +113,28 @@ export default function FormFiles (): JSX.Element {
     router.refresh()
   }
 
+  const handleShowModal = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault()
+    if (isValidateCustomUrl === false && enabledCustomUrl) return
+    setShowModalConfirm(true)
+    const file = getValues('file')
+    const name = getValues('name') ?? ''
+    if (errors.name?.message != null) setErrors('name', { message: '' })
+    if (errors.file?.message != null) setErrors('file', { message: '' })
+    try {
+      inputFiles.parse({ file, name })
+    } catch (error) {
+      const { message } = (error as { errors: [{ message: string }] }).errors[0] ?? { message: 'Ha ocurrido un error' }
+      const { path } = (error as { errors: [{ path: string }] }).errors[0]
+
+      console.log('path', path[0])
+
+      if (path[0] === 'file') setErrors('file', { message })
+      if (path[0] === 'name') setErrors('name', { message })
+      setShowModalConfirm(false)
+    }
+  }
+
   const handleCloseImagePreview = (): void => {
     setFilePreview({ preview: '', uploaded: '' })
     setValue('name', '')
@@ -134,18 +161,48 @@ export default function FormFiles (): JSX.Element {
     if (e.target.value.length > 20) return
     setCustomUrl(e.target.value)
     if (e.target.value === '') return
-    const isValid = await isExistUrl(e.target.value)
+    const isValid = await isExistUrl(e.target.value, TypesServices.FILE)
     setIsValidateCustomUrl(isValid)
   }
 
   return (
     <section className='flex flex-col items-center'>
     {
+      showModalConfirm &&
+      <>
+        <div onClick={() => { setShowModalConfirm(false) }} className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-40 cursor-pointer' />
+        <div className='absolute inset-0 w-1/2 h-fit m-auto flex flex-col items-center gap-6 py-8 bg-slate-500 rounded-lg z-50'>
+          {
+            user.uid !== ''
+              ? <>
+                  <div className='flex flex-col gap-6 items-center'>
+                    <span className='text-3xl font-semibold'>Acortar url</span>
+                    <p className='text-white/60'>¿Estás seguro de acortar la url? Gastarás 1 token</p>
+                  </div>
+                  <div className='flex justify-between items-center gap-4'>
+                    <button className='text-blue-600 bg-white w-fit px-4 py-2 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Cancelar</button>
+                    <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={handleSubmit(onSubmit)}>Aceptar</button>
+                  </div>
+                </>
+              : <>
+                <div className='flex flex-col gap-6 items-center'>
+                  <span className='text-3xl font-semibold'>Iniciar sesión</span>
+                  <p className='text-white/60'>Para realizar esta operación debes iniciar sesión y obtener tokens</p>
+                  </div>
+                  <div className='flex justify-between items-center gap-4'>
+                    <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Aceptar</button>
+                  </div>
+                </>
+          }
+        </div>
+      </>
+    }
+    {
       link === ''
-        ? <form onSubmit={handleSubmit(onSubmit)} method='post' encType='multipart/form-data' className='flex flex-col gap-6 my-4'>
+        ? <form onSubmit={handleShowModal} method='post' encType='multipart/form-data' className='flex flex-col gap-6 my-4'>
           {
             filePreview.preview === ''
-              ? <label htmlFor="inputFile" className="flex justify-center items-center gap-6 px-8 py-10 border-[4px] border-white border-dashed rounded-md cursor-pointer">
+              ? <label htmlFor="inputFile" className={`${(uploading || Number(tokens) < 1) ? 'opacity-30 cursor-not-allowed' : ''} flex justify-center items-center gap-6 px-8 py-10 border-[4px] border-white border-dashed rounded-md cursor-pointer`}>
                   <img className='size-20' src="/icons/add-image-icon.svg" alt="agregar imagen" />
                   <div className='flex flex-col gap-2'>
                     <span className='text-lg font-semibold'>Agregar archivo</span>
@@ -154,24 +211,24 @@ export default function FormFiles (): JSX.Element {
               </label>
               : <div className='relative'>
                   <img className='w-[500px] h-[200px] aspect-video object-cover rounded-lg' src={filePreview.preview} alt="imagen a subir" />
-                  <button className='absolute top-2 right-2 shadow-md rounded-full' onClick={handleCloseImagePreview}>
+                  <button className='bg-white absolute top-2 right-2 shadow-md rounded-full' onClick={handleCloseImagePreview}>
                     <CrossIcon fullIcon={false} />
                   </button>
                 </div>
           }
           <input className='hidden' id='inputFile' type='file' accept="*" {...register('file', { onChange: handleChangeFile })} disabled={uploading || Number(tokens) < 1} />
-          {errors.file?.message != null && <span>{String(errors.file?.message)}</span>}
+          {errors.file?.message != null && <span className='text-red-600'>{String(errors.file?.message)}</span>}
           <div className='flex gap-2'>
             <div className='flex w-full relative'>
-              <input className='flex-1 relative px-4 bg-slate-200 text-black py-2 rounded-lg shadow-md transition-all ease-out duration-300 z-20' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Nombre del archivo'}`} {...register('name')} disabled={uploading || Number(tokens) < 1} />
+              <input className='flex-1 relative px-4 bg-slate-200 text-black py-2 rounded-lg shadow-md transition-all ease-out duration-300 z-20 disabled:cursor-not-allowed' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Nombre del archivo'}`} {...register('name')} disabled={uploading || Number(tokens) < 1} />
               <div className='top-7 absolute right-0 flex w-full transition-all ease-out duration-300'>
                 <div className='relative w-full'>
                   <input className='absolute top-5 left-[10px] size-4 shadow-lg z-30 cursor-pointer' type="checkbox" onChange={handleCheckCustomUrl} />
-                  <input className='shadow-md relative w-full h-full px-10 bg-slate-200 text-black pt-4 pb-2 rounded-b-lg transition-all ease-out duration-300 z-10 disabled:opacity-50' type='text' placeholder='Url personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
+                  <input className='shadow-md relative w-full h-full px-10 bg-slate-200 text-black pt-4 pb-2 rounded-b-lg transition-all ease-out duration-300 z-10 disabled:opacity-30' type='text' placeholder='Url personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
                 </div>
               </div>
             </div>
-            <button disabled={uploading || Number(tokens) < 1} className={`${uploading ? 'opacity-50' : ''} bg-blue-400 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30`} type='submit' value='Upload'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
+            <button disabled={uploading || Number(tokens) < 1} className={`${uploading ? 'opacity-50' : ''} bg-blue-400 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed`} type='submit' value='Upload'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
           </div>
           <div className='flex flex-col justify-center items-center mt-10'>
             {
@@ -186,7 +243,7 @@ export default function FormFiles (): JSX.Element {
               </div>
             }
           </div>
-          {errors.file?.message != null && <span>{String(errors.name?.message)}</span>}
+          {errors.name?.message != null && <span className='text-red-600'>{String(errors.name?.message)}</span>}
           {error != null && <p className='text-red-600'>{error}</p>}
           {
             user.uid !== ''

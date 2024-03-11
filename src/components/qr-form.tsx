@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { type z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { shallow } from 'zustand/shallow'
+import QRCode from 'react-qr-code'
 
 // Schema
 import { inputUrl } from '@/schema/zod'
@@ -34,7 +35,7 @@ import { showNotification } from '@/lib/utils'
 // Types
 import { TypesServices } from '@/types/types.d'
 
-export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: string, longUrl: string }> }): JSX.Element {
+export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: string }> }): JSX.Element {
   const router = useRouter()
   const [url, setUrl] = useState('')
   const [isPasted, setIsPasted] = useState(false)
@@ -45,6 +46,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
   const [isValidateCustomUrl, setIsValidateCustomUrl] = useState<boolean | 'pending'>(false)
   const [showModalConfirm, setShowModalConfirm] = useState(false)
   const [isUploading, setUploading] = useState(false)
+  const qrCodeRef = useRef<any>(null)
 
   const { user } = userStore((state) => ({
     user: state.user
@@ -67,9 +69,9 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
     setShowModalConfirm(false)
     setUploading(true)
     const { longUrl } = data
-    const res = await fetch(`${API_URL}/urls`, {
+    const res = await fetch(`${API_URL}/qrs`, {
       method: 'POST',
-      body: JSON.stringify({ longUrl, userId: user.uid, customUrl })
+      body: JSON.stringify({ longUrl, userId: user.uid })
     })
     if (res.status === 400) {
       const { error } = await res.json() as { error: string } ?? { error: 'Ha ocurrido un error' }
@@ -82,7 +84,6 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
     if (user.uid === '') {
       await addUrlsShortenedCookies(shortUrl)
     }
-    setUrl(shortUrl)
     setUploading(false)
     router.refresh()
   }
@@ -104,6 +105,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
 
   const handleType = (e: React.ChangeEvent<HTMLInputElement>): void => {
     e.target.value === '' ? setClearEnabled(false) : setClearEnabled(true)
+    setUrl(e.target.value)
   }
 
   const handleCheckCustomUrl = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -134,9 +136,39 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
     setClearEnabled(false)
   }
 
+  const downloadQRCode = (qrName: string, urlName: string): void => {
+    if (qrCodeRef.current == null) return
+    const svgString = qrCodeRef.current.outerHTML
+    const urlNameFormatted = urlName.split('/')[2]
+    const extensionFile = 'jpg'
+    const fileName = `${urlNameFormatted}-${qrName}.${extensionFile}`
+    const blob = new Blob([svgString], { type: 'image/svg+xml' })
+    console.log('blob', blob)
+    const blobUrl = URL.createObjectURL(blob)
+    // Svg to canvas to image
+    const img = new Image()
+    img.src = blobUrl
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      canvas.width = img.width
+      canvas.height = img.height
+      ctx?.drawImage(img, 0, 0)
+      const a = document.createElement('a')
+      a.download = fileName
+      a.href = canvas.toDataURL('image/png')
+      a.click()
+      canvas.remove()
+      img.remove()
+      URL.revokeObjectURL(blobUrl)
+    }
+  }
+
   return (
-    <section className='flex flex-col justify-center'>
+    <section className='flex flex-col justify-center gap-2 px-6'>
+      <h1 className='text-6xl font-semibold text-center'>Generar Qr</h1>
       <PaymentBtn />
+      <QRCode className='m-auto' value={url} />
       {
         showModalConfirm &&
         <>
@@ -170,7 +202,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
       <form onSubmit={(!enabledCustomUrl && customUrl === '') ? handleSubmit(onSubmit) : handleShowModal} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
         <div className='flex gap-4'>
           <div className='relative'>
-            <input className={`${clearEnabled ? 'ps-10' : 'ps-4'} shadow-md relative pe-10 bg-slate-200 text-black py-2 rounded-lg transition-all ease-out duration-300 z-20`} type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} onChange={handleType} />
+            <input className={`${clearEnabled ? 'ps-10' : 'ps-4'} shadow-md relative pe-10 bg-slate-200 text-black py-2 rounded-lg transition-all ease-out duration-300 z-20`} type='text' placeholder="https://link-de-ejemplo" {...register('longUrl')} onChange={handleType} />
             <div className={`${clearEnabled ? 'top-7 opacity-100' : 'top-0 opacity-0'} absolute right-0 flex transition-all ease-out duration-300`}>
               <div className='relative'>
                 <input className='absolute top-5 left-[10px] size-4 shadow-lg z-30 cursor-pointer' type="checkbox" onChange={handleCheckCustomUrl} />
@@ -183,7 +215,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
                 : <button onClick={handlePaste} className='absolute top-[5px] right-1 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
             }
           </div>
-          <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}>{!isUploading ? 'Acortar' : 'Acortando...'}</button>
+          <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}>{!isUploading ? 'Generar' : 'Generando...'}</button>
         </div>
         <div className='flex flex-col justify-center items-center mt-10'>
           {errors.longUrl?.message != null && <span className='text-red-600'>{String(errors.longUrl?.message)}</span>}
@@ -200,32 +232,33 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
           }
         </div>
       </form>
-      {
+      {/* {
         url !== '' && (
           <div className='flex justify-center gap-2 my-6'>
             <span>Nueva url:</span>
             <Link className='underline text-blue-600' href={`/${url}`} >{url}</Link>
           </div>
         )
-      }
+      } */}
       <section className='flex flex-col items-center gap-4'>
         <h2>Mis urls</h2>
         {
-          urlsUploaded.length > 0
+          qrsUrl.length > 0
             ? <ul className='flex flex-col gap-10 my-6'>
                 {
-                  urlsUploaded.map(eachUrl => (
-                    <li key={eachUrl.url} className='flex flex-col gap-2'>
+                  qrsUrl.map(eachQr => (
+                    <li key={eachQr.qr} className='flex flex-col gap-2'>
                       <div className='flex justify-between items-center gap-4'>
-                        <Link href={`/${eachUrl.url}`} className='text-sky-200 underline'>{eachUrl.url}</Link>
-                        <ActionButtonsLink url={eachUrl.url} setUrl={setUrl} service={SERVICES_DATA[0].value} />
+                        <Link href={`/${eachQr.url}`} className='text-sky-200 underline'>{eachQr.url}</Link>
+                        <ActionButtonsLink url={eachQr.qr} setUrl={setUrl} service={SERVICES_DATA[2].value} />
+                        <QRCode value={eachQr.url ?? ''} ref={qrCodeRef} />
+                        <button onClick={() => { downloadQRCode(eachQr.qr, eachQr.url) }}>Descargar QR</button>
                       </div>
-                      <small className='text-gray-400 text-sm'>({eachUrl.longUrl})</small>
                     </li>
                   ))
                 }
               </ul>
-            : <span>No hay links acortados</span>
+            : <span>No hay qrs generados</span>
         }
       </section>
     </section>

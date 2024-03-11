@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { type SetStateAction, type Dispatch } from 'react'
 
 // Constants
-import { API_URL } from '@/constants/constants'
+import { API_URL, SERVICES_DATA } from '@/constants/constants'
 
 // Icons
 import CopyIcon from './icons/copy-icon'
@@ -18,7 +18,7 @@ import { userStore } from '@/store/userStore'
 // Utils
 import { showNotification } from '@/lib/utils'
 
-export default function ActionButtonsLink ({ url, setUrl }: { url: string, setUrl: Dispatch<SetStateAction<string>> }): JSX.Element {
+export default function ActionButtonsLink ({ url, setUrl, service }: { url: string, setUrl: Dispatch<SetStateAction<string>>, service: typeof SERVICES_DATA[number]['value'] }): JSX.Element {
   const router = useRouter()
   const { user } = userStore((state) => ({
     user: state.user
@@ -37,8 +37,10 @@ export default function ActionButtonsLink ({ url, setUrl }: { url: string, setUr
       url
     })
   }
+
   const handleDelete = async (): Promise<void> => {
-    const res = await fetch(`${API_URL}/urls/${url}`, {
+    const apiLinkService = service === SERVICES_DATA[0].value ? 'urls' : 'qrs'
+    const res = await fetch(`${API_URL}/${apiLinkService}/${url}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'

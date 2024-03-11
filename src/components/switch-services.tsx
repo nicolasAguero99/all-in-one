@@ -36,13 +36,7 @@ export default function SwitchServices (): JSX.Element {
     const init = async (): Promise<void> => {
       const { user } = await getUserDataCookies()
       if (user == null) return
-
-      console.log('useXXXXXXXXXXXXXr', user)
-
       const tokensLength = user != null ? await getTokensByUser(user.uid) : 0
-
-      console.log('tokensLength', tokensLength)
-
       setUser(user)
       setTokens(Number(tokensLength))
     }
@@ -52,7 +46,7 @@ export default function SwitchServices (): JSX.Element {
   return (
     <div className='my-6 flex justify-center'>
       <div className='relative w-48 flex justify-center items-center bg-slate-500 px-1 py-1 rounded-full overflow-hidden'>
-        <div className={`bg-red-700 rounded-full absolute top-0 ${currentService === SERVICES_DATA[0].value ? 'left-0' : 'left-[85px]'} w-[110px] h-full transition-all duration-500 ease-out`}></div>
+        <div className={`bg-red-700 rounded-full absolute top-0 ${currentService === SERVICES_DATA[0].value ? 'left-0' : currentService === SERVICES_DATA[1].value ? 'left-[68px]' : 'left-[140px]'} w-[55px] h-full transition-all duration-500 ease-out`}></div>
         {
           SERVICES_DATA.map((service) => (
             <button className='px-6 z-20' key={service.value} onClick={() => { handleChangeService(service.value) }}>

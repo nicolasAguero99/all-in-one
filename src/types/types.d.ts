@@ -26,3 +26,8 @@ export interface ErrorStore {
   error: string
   setError: (error: string) => void
 }
+
+export enum TypesServices {
+  URL = 'URL',
+  FILE = 'FILE',
+}

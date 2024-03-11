@@ -11,7 +11,7 @@ import { db, storage } from '@/lib/firebase'
 import { generateRandomPath } from './utils'
 
 // Types
-import { type UserData, type FileData } from '@/types/types'
+import { type UserData, type FileData, TypesServices } from '@/types/types.d'
 
 // Constants
 import { API_URL } from '@/constants/constants'
@@ -143,6 +143,24 @@ export async function addUrls (longUrl: string, userId: string, customUrl: strin
   return shortUrl
 }
 
+export async function addQrs (longUrl: string, userId: string): Promise<string | { error: string, status: number }> {
+  if (userId === '') return { error: 'User not found', status: 400 }
+  const shortUrl = generateRandomPath()
+  const qrRef = doc(db, 'qrs', shortUrl)
+  await setDoc(qrRef, { url: longUrl })
+  const userRef = doc(db, 'users', userId)
+  await updateDoc(userRef, {
+    qrs: arrayUnion(qrRef)
+  })
+  // Subtract one token to user
+  const docSnap = await getDoc(userRef)
+  const { tokens } = docSnap.data() as { tokens: number }
+  await updateDoc(userRef, {
+    tokens: tokens - 1
+  })
+  return shortUrl
+}
+
 export async function getFiles (userId: string): Promise<DocumentData[] | { error: string, status: number }> {
   const docRef = doc(db, 'users', userId)
   const docSnap = await getDoc(docRef)
@@ -183,6 +201,24 @@ export async function getUrls (userId: string): Promise<Array<{ url: string, lon
     return { url, longUrl }
   }))
   return urls
+}
+
+export async function getQrs (userId: string): Promise<Array<{ qr: string, url: string }> | { error: string, status: number }> {
+  const docRef = doc(db, 'users', userId)
+  const docSnap = await getDoc(docRef)
+  if (!docSnap.exists()) return { error: 'No such document!', status: 404 }
+  const dataUser = docSnap.data()
+  if (dataUser.qrs === undefined) return { error: 'No such document!', status: 404 }
+  const qrs = await Promise.all(dataUser.qrs.map(async (eachQr: DocumentData) => {
+    const qr = eachQr._key.path.segments[6] as string
+    const urlRef = doc(db, 'qrs', qr)
+    const qrSnap = await getDoc(urlRef)
+    if (!qrSnap.exists()) return { error: 'No such document!', status: 404 }
+    const qrData = qrSnap.data()
+    const url = qrData.url
+    return { qr, url }
+  }))
+  return qrs
 }
 
 export async function deleteFile (id: string, userId: string, fileName: string, type: string): Promise<unknown | { error: string, status: number }> {
@@ -230,6 +266,19 @@ export async function deleteUrl (id: string, userId: string): Promise<{ message:
   return { message: 'Url deleted', status: 200 }
 }
 
+export async function deleteQr (id: string, userId: string): Promise<{ message: string, status: number } | { error: string, status: number }> {
+  if (userId === '') return { error: 'User not found', status: 400 }
+  const qrRef = doc(db, 'qrs', id)
+  const userRef = doc(db, 'users', userId)
+  const docSnap = await getDoc(userRef)
+  if (!docSnap.exists()) return { error: 'User not found', status: 400 }
+  await updateDoc(userRef, {
+    qrs: arrayRemove(qrRef)
+  })
+  await deleteDoc(qrRef)
+  return { message: 'Qr deleted', status: 200 }
+}
+
 export async function getTokensByUser (userId: string): Promise<number | { error: string, status: number }> {
   const docRef = doc(db, 'users', userId)
   const docSnap = await getDoc(docRef)
@@ -251,10 +300,16 @@ export async function createUser (userId: string): Promise<boolean> {
   return true
 }
 
-export async function isExistUrl (url: string): Promise<boolean> {
-  const urlRef = doc(db, 'urls', url)
-  const urlSnap = await getDoc(urlRef)
-  return !urlSnap.exists()
+export async function isExistUrl (url: string, type: TypesServices): Promise<boolean> {
+  if (type === TypesServices.FILE) {
+    const pathRef = doc(db, 'paths', url)
+    const pathSnap = await getDoc(pathRef)
+    return !pathSnap.exists()
+  } else {
+    const urlRef = doc(db, 'urls', url)
+    const urlSnap = await getDoc(urlRef)
+    return !urlSnap.exists()
+  }
 }
 
 // Cookies
