@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { shallow } from 'zustand/shallow'
 import QRCode from 'react-qr-code'
+import JSConfetti from 'js-confetti'
 
 // Schema
 import { inputUrl } from '@/schema/zod'
@@ -22,9 +23,6 @@ import { userStore } from '@/store/userStore'
 import ActionButtonsLink from './action-buttons-urls'
 import PaymentBtn from './payment-btn'
 
-// Services
-import { addUrlsShortenedCookies, isExistUrl } from '@/lib/services'
-
 // Icons
 import PasteIcon from './icons/paste-icon'
 import CrossIcon from './icons/cross-icon'
@@ -32,18 +30,15 @@ import CrossIcon from './icons/cross-icon'
 // Utils
 import { showNotification } from '@/lib/utils'
 
-// Types
-import { TypesServices } from '@/types/types.d'
+// Icons
+import DownloadIcon from './icons/download-icon'
 
 export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: string }> }): JSX.Element {
   const router = useRouter()
   const [url, setUrl] = useState('')
+  const [qr, setQr] = useState('')
   const [isPasted, setIsPasted] = useState(false)
   const [clearEnabled, setClearEnabled] = useState(false)
-  const [currentOrigin, setCurrentOrigin] = useState('')
-  const [customUrl, setCustomUrl] = useState('')
-  const [enabledCustomUrl, setEnabledCustomUrl] = useState(false)
-  const [isValidateCustomUrl, setIsValidateCustomUrl] = useState<boolean | 'pending'>(false)
   const [showModalConfirm, setShowModalConfirm] = useState(false)
   const [isUploading, setUploading] = useState(false)
   const qrCodeRef = useRef<any>(null)
@@ -57,15 +52,20 @@ export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: s
   })
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    setCurrentOrigin(window.location.origin)
-  }, [])
-
-  useEffect(() => {
     if (errors.longUrl?.message != null) setShowModalConfirm(false)
   }, [errors.longUrl?.message])
 
+  useEffect(() => {
+    if (qr === '') return
+    const confetti = async (): Promise<void> => {
+      const jsConfetti = new JSConfetti()
+      await jsConfetti.addConfetti()
+    }
+    void confetti()
+  }, [qr])
+
   const onSubmit = async (data: z.infer<typeof inputUrl>): Promise<void> => {
+    setQr('')
     setShowModalConfirm(false)
     setUploading(true)
     const { longUrl } = data
@@ -80,17 +80,19 @@ export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: s
       return
     }
     const shortUrl: string = await res.json()
-    console.log(shortUrl)
-    if (user.uid === '') {
-      await addUrlsShortenedCookies(shortUrl)
-    }
+    setQr(shortUrl)
     setUploading(false)
+    setValue('longUrl', '')
+    setClearEnabled(false)
     router.refresh()
+  }
+
+  const handleCloseQr = (): void => {
+    setQr('')
   }
 
   const handleShowModal = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault()
-    if (isValidateCustomUrl === false && enabledCustomUrl) return
     setShowModalConfirm(true)
     const url = getValues('longUrl')
     try {
@@ -108,19 +110,6 @@ export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: s
     setUrl(e.target.value)
   }
 
-  const handleCheckCustomUrl = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    e.target.checked ? setEnabledCustomUrl(true) : setEnabledCustomUrl(false)
-  }
-
-  const handleCustomUrl = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-    setIsValidateCustomUrl('pending')
-    if (e.target.value.length > 20) return
-    setCustomUrl(e.target.value)
-    if (e.target.value === '') return
-    const isValid = await isExistUrl(e.target.value, TypesServices.URL)
-    setIsValidateCustomUrl(isValid)
-  }
-
   const handlePaste = async (): Promise<void> => {
     const text = await navigator.clipboard.readText()
     setValue('longUrl', text)
@@ -132,7 +121,6 @@ export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: s
 
   const handleClear = (): void => {
     setValue('longUrl', '')
-    setValue('customUrl', '')
     setClearEnabled(false)
   }
 
@@ -168,7 +156,9 @@ export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: s
     <section className='flex flex-col justify-center gap-2 px-6'>
       <h1 className='text-6xl font-semibold text-center'>Generar Qr</h1>
       <PaymentBtn />
-      <QRCode className='m-auto' value={url} />
+      {
+        qr === '' && <QRCode className='m-auto' value={url} size={200} />
+      }
       {
         showModalConfirm &&
         <>
@@ -199,63 +189,63 @@ export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: s
           </div>
         </>
       }
-      <form onSubmit={(!enabledCustomUrl && customUrl === '') ? handleSubmit(onSubmit) : handleShowModal} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
-        <div className='flex gap-4'>
-          <div className='relative'>
-            <input className={`${clearEnabled ? 'ps-10' : 'ps-4'} shadow-md relative pe-10 bg-slate-200 text-black py-2 rounded-lg transition-all ease-out duration-300 z-20`} type='text' placeholder="https://link-de-ejemplo" {...register('longUrl')} onChange={handleType} />
-            <div className={`${clearEnabled ? 'top-7 opacity-100' : 'top-0 opacity-0'} absolute right-0 flex transition-all ease-out duration-300`}>
+      {
+        qr !== ''
+          ? <div className='relative w-fit h-fit flex flex-col gap-6 m-auto px-14 py-6'>
+              <QRCode className='m-auto' value={url} size={200} />
+              <div className='flex items-center gap-4'>
+                <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={() => { downloadQRCode(qr, url) }}>
+                  Descargar
+                </button>
+                <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={handleCloseQr}>
+                  Generar otro
+                </button>
+              </div>
+            </div>
+          : <form onSubmit={handleShowModal} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
+            <div className='flex gap-4'>
               <div className='relative'>
-                <input className='absolute top-5 left-[10px] size-4 shadow-lg z-30 cursor-pointer' type="checkbox" onChange={handleCheckCustomUrl} />
-                <input className='shadow-md relative w-full flex-1 h-full px-10 bg-slate-200 text-black pt-4 pb-2 rounded-b-lg transition-all ease-out duration-300 z-10 disabled:opacity-50' type='text' placeholder='Url personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
+                <input className={`${clearEnabled ? 'ps-10' : 'ps-4'} shadow-md relative pe-10 bg-slate-200 text-black py-2 rounded-lg transition-all ease-out duration-300 z-20`} type='text' placeholder="https://link-de-ejemplo" {...register('longUrl')} onChange={handleType} />
+                {
+                  clearEnabled
+                    ? <button onClick={handleClear} className='absolute top-[6px] left-1 text-white z-30' type='button'><CrossIcon /></button>
+                    : <button onClick={handlePaste} className='absolute top-[5px] right-1 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
+                }
               </div>
+              <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading}>{!isUploading ? 'Generar' : 'Generando...'}</button>
             </div>
-            {
-              clearEnabled
-                ? <button onClick={handleClear} className='absolute top-[6px] left-1 text-white z-30' type='button'><CrossIcon /></button>
-                : <button onClick={handlePaste} className='absolute top-[5px] right-1 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
-            }
-          </div>
-          <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}>{!isUploading ? 'Generar' : 'Generando...'}</button>
-        </div>
-        <div className='flex flex-col justify-center items-center mt-10'>
-          {errors.longUrl?.message != null && <span className='text-red-600'>{String(errors.longUrl?.message)}</span>}
-          {
-            enabledCustomUrl && <div className='flex flex-col justify-center items-center text-lg'>
-              <div className={`${isValidateCustomUrl === true ? 'text-green-500' : 'text-red-500'} flex items-center`}>
-                <small>{currentOrigin}/</small><span>{customUrl}</span>
-              </div>
-              {
-                (isValidateCustomUrl === false && customUrl !== '') && <span className='text-sm text-red-500'>Url no disponible</span>
-              }
-              {errors.customUrl?.message != null && <span className='text-red-600'>{String(errors.customUrl?.message)}</span>}
+            <div className='flex flex-col justify-center items-center mt-10'>
+              {errors.longUrl?.message != null && <span className='text-red-600'>{String(errors.longUrl?.message)}</span>}
             </div>
-          }
-        </div>
-      </form>
-      {/* {
-        url !== '' && (
-          <div className='flex justify-center gap-2 my-6'>
-            <span>Nueva url:</span>
-            <Link className='underline text-blue-600' href={`/${url}`} >{url}</Link>
-          </div>
-        )
-      } */}
+          </form>
+      }
       <section className='flex flex-col items-center gap-4'>
-        <h2>Mis urls</h2>
+        <h2>Mis Qrs</h2>
         {
           qrsUrl.length > 0
-            ? <ul className='flex flex-col gap-10 my-6'>
+            ? <ul className='flex flex-wrap justify-center items-center gap-4 px-16 my-6'>
                 {
-                  qrsUrl.map(eachQr => (
-                    <li key={eachQr.qr} className='flex flex-col gap-2'>
-                      <div className='flex justify-between items-center gap-4'>
-                        <Link href={`/${eachQr.url}`} className='text-sky-200 underline'>{eachQr.url}</Link>
-                        <ActionButtonsLink url={eachQr.qr} setUrl={setUrl} service={SERVICES_DATA[2].value} />
-                        <QRCode value={eachQr.url ?? ''} ref={qrCodeRef} />
-                        <button onClick={() => { downloadQRCode(eachQr.qr, eachQr.url) }}>Descargar QR</button>
-                      </div>
-                    </li>
-                  ))
+                  qrsUrl.map(eachQr => {
+                    const urlDivided = eachQr.url.split('/')
+                    const urlHostFormatted = urlDivided[2]
+                    const urlPathFormatted = urlDivided[3]
+
+                    return (
+                      <li key={eachQr.qr} className='relative flex flex-col overflow-hidden rounded-t-lg w-[250px] h-fit'>
+                        <Link href={`/${eachQr.url}`} className='flex justify-center items-center bg-white/90 p-4 rounded-t-lg'>
+                          <QRCode value={eachQr.url ?? ''} size={200} ref={qrCodeRef} className='hover:scale-110 transition-all duration-300 ease-out' />
+                        </Link>
+                          <div className='relative flex flex-col gap-2 p-4 pt-8 bg-slate-50 rounded-b-lg z-20'>
+                            <span className='text-black font-semibold'>{urlHostFormatted}</span>
+                            <small className='text-gray-600 text-sm'>{urlPathFormatted}</small>
+                            <div className='flex justify-between items-center gap-4'>
+                              <ActionButtonsLink url={eachQr.qr} service={SERVICES_DATA[2].value} />
+                              <button className='shadow-md rounded-lg p-1 [&>svg]:size-6' onClick={() => { downloadQRCode(eachQr.qr, eachQr.url) }}><DownloadIcon /></button>
+                            </div>
+                          </div>
+                      </li>
+                    )
+                  })
                 }
               </ul>
             : <span>No hay qrs generados</span>

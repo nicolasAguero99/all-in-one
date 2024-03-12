@@ -18,11 +18,12 @@ import { userStore } from '@/store/userStore'
 // Utils
 import { showNotification } from '@/lib/utils'
 
-export default function ActionButtonsLink ({ url, setUrl, service }: { url: string, setUrl: Dispatch<SetStateAction<string>>, service: typeof SERVICES_DATA[number]['value'] }): JSX.Element {
+export default function ActionButtonsLink ({ url, setUrl = null, service }: { url: string, setUrl?: Dispatch<SetStateAction<string>> | null, service: typeof SERVICES_DATA[number]['value'] }): JSX.Element {
   const router = useRouter()
   const { user } = userStore((state) => ({
     user: state.user
   }), shallow)
+  const isUrlService = service === SERVICES_DATA[0].value
 
   const handleCopy = async (): Promise<void> => {
     const origin = window.location.origin
@@ -39,7 +40,7 @@ export default function ActionButtonsLink ({ url, setUrl, service }: { url: stri
   }
 
   const handleDelete = async (): Promise<void> => {
-    const apiLinkService = service === SERVICES_DATA[0].value ? 'urls' : 'qrs'
+    const apiLinkService = isUrlService ? 'urls' : 'qrs'
     const res = await fetch(`${API_URL}/${apiLinkService}/${url}`, {
       method: 'DELETE',
       headers: {
@@ -50,7 +51,7 @@ export default function ActionButtonsLink ({ url, setUrl, service }: { url: stri
     const data = await res.json()
     if (data.error == null) {
       showNotification('Link eliminado', 'success')
-      setUrl('')
+      if (setUrl !== null) setUrl('')
     } else {
       showNotification('Error al eliminar el link', 'error')
     }
@@ -60,9 +61,13 @@ export default function ActionButtonsLink ({ url, setUrl, service }: { url: stri
   return (
     <>
       <div className='flex gap-4'>
-        <button onClick={handleCopy}><CopyIcon /></button>
-        <button onClick={handleShare}><ShareIcon color='ffffff' /></button>
-        <button onClick={handleDelete}><DeleteIcon /></button>
+        {
+          isUrlService && <>
+            <button onClick={handleCopy}><CopyIcon /></button>
+            <button onClick={handleShare}><ShareIcon color='ffffff' /></button>
+          </>
+        }
+        <button className={isUrlService ? '' : 'shadow-md rounded-lg p-1 [&>svg]:size-6'} onClick={handleDelete}><DeleteIcon /></button>
       </div>
     </>
   )

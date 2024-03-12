@@ -78,13 +78,11 @@ export default function FormFiles (): JSX.Element {
     if (user.uid === '') return
     setUploading(true)
     const file = data.file[0] as File
-    console.log('formData', file)
     const formData = new FormData()
     formData.append('file', file)
     formData.append('name', data.name.trim())
     formData.append('userId', user.uid)
     enabledCustomUrl && formData.append('customUrl', customUrl)
-    console.log('user.uid', user.uid)
     const res = await fetch(`${API_URL}/files`, {
       method: 'POST',
       body: formData
@@ -95,16 +93,11 @@ export default function FormFiles (): JSX.Element {
       setUploading(false)
       return
     }
-
     const reader = new FileReader()
-
     reader.onloadend = function () {
       setFilePreview({ preview: '', uploaded: String(reader.result) })
     }
-
     reader.readAsDataURL(file)
-
-    console.log(linkToFile)
     setFileType(file.type.split('/')[0])
     setLink(String(linkToFile))
     setUploading(false)
