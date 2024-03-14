@@ -124,7 +124,7 @@ export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: s
     setClearEnabled(false)
   }
 
-  const downloadQRCode = (qrName: string, urlName: string): void => {
+  const handleDownloadQRCode = (qrName: string, urlName: string): void => {
     if (qrCodeRef.current == null) return
     const svgString = qrCodeRef.current.outerHTML
     const urlNameFormatted = urlName.split('/')[2]
@@ -133,6 +133,9 @@ export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: s
     const blob = new Blob([svgString], { type: 'image/svg+xml' })
     console.log('blob', blob)
     const blobUrl = URL.createObjectURL(blob)
+
+    console.log('blobUrl', blobUrl)
+
     // Svg to canvas to image
     const img = new Image()
     img.src = blobUrl
@@ -194,7 +197,7 @@ export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: s
           ? <div className='relative w-fit h-fit flex flex-col gap-6 m-auto px-14 py-6'>
               <QRCode className='m-auto' value={url} size={200} />
               <div className='flex items-center gap-4'>
-                <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={() => { downloadQRCode(qr, url) }}>
+                <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={() => { handleDownloadQRCode(qr, url) }}>
                   Descargar
                 </button>
                 <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={handleCloseQr}>
@@ -240,7 +243,7 @@ export default function QrForm ({ qrsUrl }: { qrsUrl: Array<{ qr: string, url: s
                             <small className='text-gray-600 text-sm'>{urlPathFormatted}</small>
                             <div className='flex justify-between items-center gap-4'>
                               <ActionButtonsLink url={eachQr.qr} service={SERVICES_DATA[2].value} />
-                              <button className='shadow-md rounded-lg p-1 [&>svg]:size-6' onClick={() => { downloadQRCode(eachQr.qr, eachQr.url) }}><DownloadIcon /></button>
+                              <button className='shadow-md rounded-lg p-1 [&>svg]:size-6' onClick={() => { handleDownloadQRCode(eachQr.qr, eachQr.url) }}><DownloadIcon /></button>
                             </div>
                           </div>
                       </li>

@@ -8,7 +8,6 @@ import 'react-toastify/dist/ReactToastify.css'
 
 // Components
 import Nav from '@/components/nav'
-import SwitchServices from '@/components/switch-services'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -26,7 +25,6 @@ export default function RootLayout ({
     <html lang='es'>
       <body className={`${inter.className} bg-gray-800 text-white`}>
         <Nav />
-        <SwitchServices />
         {children}
         <ToastContainer />
       </body>
