@@ -1,5 +1,6 @@
 // Components
 import MainPage from '@/components/main-page'
+import SwitchServices from '@/components/switch-services'
 
 // Constants
 import { type PAYMENT_STATUS } from '@/constants/constants'
@@ -10,5 +11,9 @@ import { getUrls, getUserDataCookies } from '@/lib/services'
 export default async function App ({ searchParams }: { searchParams: { paymentStatus: typeof PAYMENT_STATUS[number] } }): Promise<JSX.Element> {
   const { user } = await getUserDataCookies()
   const urlsUploaded = user != null ? await getUrls(user?.uid) as Array<{ url: string, longUrl: string }> : []
-  return <MainPage searchParamsValue={searchParams} urlsUploaded={urlsUploaded} />
+  return (
+    <MainPage searchParamsValue={searchParams} urlsUploaded={urlsUploaded}>
+      <SwitchServices />
+    </MainPage>
+  )
 }
