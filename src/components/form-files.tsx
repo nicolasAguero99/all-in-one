@@ -17,7 +17,7 @@ import { errorStore } from '@/store/errorStore'
 import { inputFiles } from '@/schema/zod'
 
 // Constants
-import { API_URL } from '@/constants/constants'
+import { API_URL, FILE_TYPES } from '@/constants/constants'
 
 // Icons
 import CrossIcon from './icons/cross-icon'
@@ -31,9 +31,9 @@ import { TypesServices } from '@/types/types.d'
 export default function FormFiles (): JSX.Element {
   const router = useRouter()
   const [link, setLink] = useState('')
-  const [filePreview, setFilePreview] = useState({ preview: '', uploaded: '' })
+  const [filePreview, setFilePreview] = useState('')
   const [fileName, setFileName] = useState('')
-  const [fileType, setFileType] = useState('')
+  const [fileType, setFileType] = useState({ type: '', extension: '' })
   const [currentOrigin, setCurrentOrigin] = useState('')
   const [uploading, setUploading] = useState(false)
   const [customUrl, setCustomUrl] = useState('')
@@ -95,10 +95,10 @@ export default function FormFiles (): JSX.Element {
     }
     const reader = new FileReader()
     reader.onloadend = function () {
-      setFilePreview({ preview: '', uploaded: String(reader.result) })
+      setFilePreview(String(reader.result))
     }
     reader.readAsDataURL(file)
-    setFileType(file.type.split('/')[0])
+    setFileType({ type: file.type.split('/')[0], extension: file.type.split('/')[1] })
     setLink(String(linkToFile))
     setUploading(false)
     setValue('file', '')
@@ -129,18 +129,21 @@ export default function FormFiles (): JSX.Element {
   }
 
   const handleCloseImagePreview = (): void => {
-    setFilePreview({ preview: '', uploaded: '' })
+    setFilePreview('')
+    setFileType({ type: '', extension: '' })
     setValue('name', '')
   }
 
   const handleChangeFile = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files == null) return
     const file = e.target.files[0] ?? { name: '' }
+    console.log('file', file)
     setFileName(file.name)
     // Create a preview of the file
     const reader = new FileReader()
     reader.onloadend = function () {
-      setFilePreview({ preview: String(reader.result), uploaded: '' })
+      setFilePreview(String(reader.result))
+      setFileType({ type: file.type.split('/')[0], extension: file.type.split('/')[1] })
     }
     reader.readAsDataURL(file)
   }
@@ -156,6 +159,13 @@ export default function FormFiles (): JSX.Element {
     if (e.target.value === '') return
     const isValid = await isExistUrl(e.target.value, TypesServices.FILE)
     setIsValidateCustomUrl(isValid)
+  }
+
+  const handleResetForm = (): void => {
+    setLink('')
+    setFilePreview('')
+    setFileName('')
+    setFileType({ type: '', extension: '' })
   }
 
   return (
@@ -194,7 +204,7 @@ export default function FormFiles (): JSX.Element {
       link === ''
         ? <form onSubmit={handleShowModal} method='post' encType='multipart/form-data' className='flex flex-col gap-6 my-4'>
           {
-            filePreview.preview === ''
+            filePreview === ''
               ? <label htmlFor="inputFile" className={`${(uploading || Number(tokens) < 1) ? 'opacity-30 cursor-not-allowed' : ''} flex justify-center items-center gap-6 px-8 py-10 border-[4px] border-white border-dashed rounded-md cursor-pointer`}>
                   <img className='size-20' src="/icons/add-image-icon.svg" alt="agregar imagen" />
                   <div className='flex flex-col gap-2'>
@@ -203,7 +213,13 @@ export default function FormFiles (): JSX.Element {
                   </div>
               </label>
               : <div className='relative'>
-                  <img className='w-[500px] h-[200px] aspect-video object-cover rounded-lg' src={filePreview.preview} alt="imagen a subir" />
+                {
+                  fileType.type === FILE_TYPES.IMAGE
+                    ? <img className='w-[500px] h-[200px] aspect-video object-cover rounded-lg' src={filePreview} alt="imagen a subir" />
+                    : <video className='w-[500px] h-[200px] aspect-video object-cover rounded-lg' src={filePreview} controls>
+                      <source src={filePreview} type={`video/${fileType.extension}`} />
+                    </video>
+                }
                   <button className='bg-white absolute top-2 right-2 shadow-md rounded-full' onClick={handleCloseImagePreview}>
                     <CrossIcon fullIcon={false} />
                   </button>
@@ -248,14 +264,19 @@ export default function FormFiles (): JSX.Element {
             <span>¡Listo!</span>
             <p>Link generado:</p>
             {
-              fileType === 'image'
+              (fileType.type === FILE_TYPES.IMAGE || fileType.type === FILE_TYPES.VIDEO)
                 ? <Link className='underline text-blue-600' href={`/f/${link}`}>
-                    <img className='w-[500px] h-[200px] aspect-video object-cover rounded-lg my-6' src={filePreview.uploaded} alt='file uploaded' />
-                    {/* {link} */}
+                  {
+                    fileType.type === FILE_TYPES.IMAGE
+                      ? <img className='w-[500px] h-[200px] aspect-video object-cover rounded-lg my-6' src={filePreview} alt='file uploaded' />
+                      : <video className='w-[500px] h-[200px] aspect-video object-cover rounded-lg my-6' controls>
+                          <source src={filePreview} type={`video/${fileType.extension}`} />
+                        </video>
+                  }
                   </Link>
                 : <Link className='underline text-blue-600' href={`/${link}`}>{link}</Link>
             }
-            <button onClick={() => { setLink('') }} className='bg-blue-400 text-white w-fit px-4 py-2 rounded-lg'>Subir más</button>
+            <button onClick={handleResetForm} className='bg-blue-400 text-white w-fit px-4 py-2 rounded-lg'>Subir más</button>
           </section>
     }
     </section>

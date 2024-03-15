@@ -14,7 +14,7 @@ import { generateRandomPath } from './utils'
 import { type UserData, type FileData, TypesServices } from '@/types/types.d'
 
 // Constants
-import { API_URL } from '@/constants/constants'
+import { API_URL, FILE_TYPES } from '@/constants/constants'
 
 export async function getFilesByUser (userId: string): Promise<FileData[]> {
   const res = await fetch(`${API_URL}/users/${userId}`, { cache: 'no-cache' })
@@ -176,9 +176,9 @@ export async function getFiles (userId: string): Promise<DocumentData[] | { erro
       const dataFile = docSnap.data()
       const fileRef = ref(storage, dataFile.fileName as string)
       const type = dataFile.type.split('/')[0]
-      const fileURL = type === 'image' ? await getDownloadURL(fileRef) : dataFile.url
+      const fileURL = (type === FILE_TYPES.IMAGE || type === FILE_TYPES.VIDEO) ? await getDownloadURL(fileRef) : dataFile.url
       const link = dataFile.link._key.path.segments[6]
-      const fileData = type === 'image' ? { ...dataFile, link, fileURL } : { ...dataFile, link }
+      const fileData = (type === FILE_TYPES.IMAGE || type === FILE_TYPES.VIDEO) ? { ...dataFile, link, fileURL } : { ...dataFile, link }
       return fileData
     })
   )
@@ -223,16 +223,13 @@ export async function getQrs (userId: string): Promise<Array<{ qr: string, url: 
 
 export async function deleteFile (id: string, userId: string, fileName: string, type: string): Promise<unknown | { error: string, status: number }> {
   const userRef = doc(db, 'users', userId)
-  const pathRef = type === 'image' ? doc(db, 'paths', id) : doc(db, 'urls', id)
+  const pathRef = (type === FILE_TYPES.IMAGE || type === FILE_TYPES.VIDEO) ? doc(db, 'paths', id) : doc(db, 'urls', id)
   const imagenRef = ref(storage, fileName)
   // Get the path's file
   const pathSnap = await getDoc(pathRef)
   if (!pathSnap.exists()) return { error: 'No such document!', status: 404 }
   const data = pathSnap.data()
   const fileId: string = data.file._key.path.segments[6]
-
-  console.log('fileId', fileId)
-
   const fileRef = doc(db, 'files', fileId)
   const userSnap = await getDoc(userRef)
   if (!userSnap.exists()) return { error: 'No such document!', status: 404 }

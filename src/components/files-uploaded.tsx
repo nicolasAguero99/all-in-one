@@ -1,6 +1,5 @@
 'use client'
 
-// import { useEffect } from 'react'
 import Link from 'next/link'
 
 // Components
@@ -17,6 +16,9 @@ import { filesSizesToKb, formattedDate } from '@/lib/utils'
 // Icons
 import ShareIcon from './icons/share-icon'
 
+// Constants
+import { FILE_TYPES } from '@/constants/constants'
+
 export default function FilesUploaded ({ files }: { files: FileData[] }): JSX.Element {
   const handleShare = async (path: string): Promise<void> => {
     if (navigator.share != null) {
@@ -29,7 +31,7 @@ export default function FilesUploaded ({ files }: { files: FileData[] }): JSX.El
   }
 
   return (
-    <main className='flex flex-col gap-4'>
+    <main className='flex flex-col gap-4 py-6'>
       <h1 className='text-6xl font-semibold text-center'>Subir archivos</h1>
       <PaymentBtn />
       <FormFiles />
@@ -40,15 +42,22 @@ export default function FilesUploaded ({ files }: { files: FileData[] }): JSX.El
             files.length > 0
               ? files.map(file => {
                 const type = file.type?.split('/')[0]
-                const linkType = type === 'image' ? '/f/' : '/'
-                const imageType = type === 'image' ? file.fileURL : '/pdf-icon.png'
+                const extension = file.type?.split('/')[1]
+                const linkType = (type === FILE_TYPES.IMAGE || type === FILE_TYPES.VIDEO) ? '/f/' : '/'
+                const fileSrc = (type === FILE_TYPES.IMAGE || type === FILE_TYPES.VIDEO) ? file.fileURL : '/pdf-icon.png'
                 const [day, month] = formattedDate(file.createdAt)
                 const sizeFormatted = filesSizesToKb(file.size)
                 return (
                   <li key={file.link} className='relative flex flex-col overflow-hidden rounded-t-lg'>
                     <DeleteFile pathId={file.link} fileName={file.fileName} type={type} />
                     <Link href={`${linkType}${file.link}`} className='[&>img]:hover:scale-110'>
-                      <img className={`${type === 'image' ? ' w-[250px] h-[150px]' : 'size-[120px]'} object-cover transition-transform ease-out duration-300 z-10`} src={imageType} alt='image' />
+                      {
+                        type === FILE_TYPES.IMAGE
+                          ? <img className={`${type === FILE_TYPES.IMAGE ? ' w-[250px] h-[150px]' : 'size-[120px]'} object-cover transition-transform ease-out duration-300 z-10`} src={fileSrc} alt='image uploaded' />
+                          : <video className='w-[250px] h-[150px] object-cover transition-transform ease-out duration-300 z-10' controls>
+                            <source src={fileSrc} type={`video/${extension}`} />
+                          </video>
+                      }
                     </Link>
                       <div className='relative flex flex-col gap-2 p-4 pt-8 bg-slate-50 rounded-b-lg z-20'>
                         <span className='text-black font-semibold capitalize'>{file.name}</span>

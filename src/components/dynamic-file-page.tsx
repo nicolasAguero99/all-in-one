@@ -14,10 +14,12 @@ import NotFound from '@/components/not-found'
 import DownloadIcon from './icons/download-icon'
 import ShareIcon from './icons/share-icon'
 import ExternalIcon from './icons/external-icon'
+import { FILE_TYPES } from '@/constants/constants'
 
 export default function DynamicFilePage ({ paramsValue }: { paramsValue: { path: string } }): JSX.Element | undefined {
   console.log('path', paramsValue)
   const { path } = paramsValue
+  const [fileType, setFileType] = useState({ type: '', extension: '' })
   const [file, setFile] = useState('')
   const [isExist, setIsExist] = useState(true)
 
@@ -33,12 +35,12 @@ export default function DynamicFilePage ({ paramsValue }: { paramsValue: { path:
         const data = docSnap.data()
         const fileReference = doc(db, 'files', data?.file.id as string)
         const fileDoc = await getDoc(fileReference)
-        const fileData = fileDoc.data() as { fileName: string }
-        const fileRef = ref(storage, fileData.fileName)
+        const fileData = fileDoc.data()
+        const fileRef = ref(storage, fileData?.fileName as string)
         const file = await getDownloadURL(fileRef)
         setFile(file)
-        console.log('fileData', file)
-
+        console.log('file', file)
+        setFileType({ type: fileData?.type.split('/')[0], extension: fileData?.type.split('/')[1] })
         return data
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -53,7 +55,7 @@ export default function DynamicFilePage ({ paramsValue }: { paramsValue: { path:
     const res = await fetch(file)
     const blobFile = await res.blob()
     const blobUrl = URL.createObjectURL(blobFile)
-    const extension = 'jpg'
+    const extension = fileType.extension
     const fileName = `file-${path}.${extension}`
     const link = document.createElement('a')
     link.href = blobUrl
@@ -89,9 +91,12 @@ export default function DynamicFilePage ({ paramsValue }: { paramsValue: { path:
   return (
     <main className='flex flex-col gap-8 items-center'>
       {
-        file != null && (
-          <img className='size-auto max-w-[800px] object-cover' src={file} alt='image uploaded' />
-        )
+        file != null &&
+          fileType.type === FILE_TYPES.IMAGE
+          ? <img className='size-auto max-w-[800px] object-cover' src={file} alt='image uploaded' />
+          : <video className='w-[250px] h-[150px] object-cover transition-transform ease-out duration-300 z-10' controls>
+              <source src={file} type={`video/${fileType.extension}`} />
+            </video>
       }
       <div className='flex gap-8 items-center'>
         <button className='bg-white shadow-md rounded-lg p-1 [&>svg]:size-8' onClick={handleDownloadFile}><DownloadIcon /></button>
