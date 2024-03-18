@@ -73,8 +73,8 @@ export default function SignUpOutButton (): JSX.Element {
               <button onClick={handleLogOut}><LogOutIcon /></button>
             </div>
           : <div className='w-fit flex items-center gap-8 px-4 py-2 rounded-lg'>
-              <button onClick={handleSignUp} className='flex items-center gap-2 bg-blue-600 text-white p-2 rounded-lg'>
-                Iniciar sesión <GoogleIcon />
+              <button onClick={handleSignUp} className='flex items-center gap-2 bg-bckg text-primary py-2 px-6 rounded-full border-[1px] border-primary'>
+                <GoogleIcon /> Iniciar sesión
               </button>
             </div>
       }

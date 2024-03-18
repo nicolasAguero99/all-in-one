@@ -168,9 +168,9 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
         </>
       }
       <form onSubmit={(!enabledCustomUrl && customUrl === '') ? handleSubmit(onSubmit) : handleShowModal} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
-        <div className='flex gap-4'>
-          <div className='relative'>
-            <input className={`${clearEnabled ? 'ps-10' : 'ps-4'} shadow-md relative pe-10 bg-slate-200 text-black py-2 rounded-lg transition-all ease-out duration-300 z-20`} type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} onChange={handleType} />
+        <div className='flex w-full max-w-[800px] gap-4'>
+          <div className='relative w-full after:absolute after:top-3 after:-left-1 after:block after:bg-bckg after:w-[calc(100%+10px)] after:h-full after:border-[1px] after:border-primary after:rounded-full'>
+            <input className='w-full relative bg-primary text-secondary py-2 ps-10 rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20' type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} onChange={handleType} />
             <div className={`${clearEnabled ? 'top-7 opacity-100' : 'top-0 opacity-0'} absolute right-0 flex transition-all ease-out duration-300`}>
               <div className='relative'>
                 <input className='absolute top-5 left-[10px] size-4 shadow-lg z-30 cursor-pointer' type="checkbox" onChange={handleCheckCustomUrl} />
@@ -179,11 +179,11 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
             </div>
             {
               clearEnabled
-                ? <button onClick={handleClear} className='absolute top-[6px] left-1 text-white z-30' type='button'><CrossIcon /></button>
-                : <button onClick={handlePaste} className='absolute top-[5px] right-1 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
+                ? <button onClick={handleClear} className='absolute top-[7px] left-2 text-white z-30' type='button'><CrossIcon /></button>
+                : <button onClick={handlePaste} className='absolute top-[5px] left-2 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
             }
+            <button className='absolute top-[1px] right-[1px] w-fit bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}>{!isUploading ? 'Acortar' : 'Acortando...'}</button>
           </div>
-          <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}>{!isUploading ? 'Acortar' : 'Acortando...'}</button>
         </div>
         <div className='flex flex-col justify-center items-center mt-10'>
           {errors.longUrl?.message != null && <span className='text-red-600'>{String(errors.longUrl?.message)}</span>}
@@ -208,24 +208,25 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
           </div>
         )
       }
-      <section className='flex flex-col items-center gap-4'>
-        <h2>Mis urls</h2>
+      <section className='flex flex-col gap-4 w-full max-w-[1000px] bg-bckg m-auto rounded-lg shadow-md shadow-[#ffffff]/5 p-6'>
+        <h2 className='flex gap-1 items-center text-xl font-semibold'>
+          <img src="/icons/url-icon.svg" alt="url icon" />
+          URLs recientes
+        </h2>
         {
           urlsUploaded.length > 0
-            ? <ul className='flex flex-col gap-10 my-6'>
+            ? <ul className='flex flex-col gap-10 my-6 px-2'>
                 {
                   urlsUploaded.map(eachUrl => (
-                    <li key={eachUrl.url} className='flex flex-col gap-2'>
-                      <div className='flex justify-between items-center gap-4'>
-                        <Link href={`/${eachUrl.url}`} className='text-sky-200 underline'>{eachUrl.url}</Link>
-                        <ActionButtonsLink url={eachUrl.url} setUrl={setUrl} service={SERVICES_DATA[0].value} />
-                      </div>
-                      <small className='text-gray-400 text-sm'>({eachUrl.longUrl})</small>
+                    <li key={eachUrl.url} className='flex justify-between items-center gap-4 text-tertiary'>
+                      <Link href={`/${eachUrl.url}`} className='text-sm underline w-[320px] whitespace-nowrap overflow-x-hidden text-ellipsis'>{eachUrl.longUrl}</Link>
+                      <small className='text-sm'>/{eachUrl.url}</small>
+                      <ActionButtonsLink url={eachUrl.url} setUrl={setUrl} service={SERVICES_DATA[0].value} />
                     </li>
                   ))
                 }
               </ul>
-            : <span>No hay links acortados</span>
+            : <span className='text-center text-xl text-primary/50 py-6'>No hay URLs acortados</span>
         }
       </section>
     </section>

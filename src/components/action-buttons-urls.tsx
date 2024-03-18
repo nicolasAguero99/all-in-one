@@ -60,7 +60,7 @@ export default function ActionButtonsLink ({ url, setUrl = null, service }: { ur
 
   return (
     <>
-      <div className='flex gap-4'>
+      <div className='flex gap-2'>
         {
           isUrlService && <>
             <button onClick={handleCopy}><CopyIcon /></button>

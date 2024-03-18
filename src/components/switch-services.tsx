@@ -45,11 +45,10 @@ export default function SwitchServices (): JSX.Element {
 
   return (
     <div className='my-6 flex justify-center'>
-      <div className='relative w-48 flex justify-center items-center bg-slate-500 px-1 py-1 rounded-full overflow-hidden'>
-        <div className={`bg-red-700 rounded-full absolute top-0 ${currentService === SERVICES_DATA[0].value ? 'left-0' : currentService === SERVICES_DATA[1].value ? 'left-[68px]' : 'left-[140px]'} w-[55px] h-full transition-all duration-500 ease-out`}></div>
+      <div className='w-fit flex items-center gap-4'>
         {
           SERVICES_DATA.map((service) => (
-            <button className='px-6 z-20' key={service.value} onClick={() => { handleChangeService(service.value) }}>
+            <button className={`${service.value === currentService ? 'bg-primary text-bckg' : ''} bg-bckg text-primary py-1 px-8 rounded-full border-[1px] border-primary z-20`} key={service.value} onClick={() => { handleChangeService(service.value) }}>
               {service.name}
             </button>
           ))

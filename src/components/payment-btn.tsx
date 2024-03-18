@@ -65,34 +65,34 @@ export default function PaymentBtn (): JSX.Element {
   }
 
   return (
-    <div className='flex justify-center items-center gap-4 my-6'>
+    <>
       {
         user.uid !== '' &&
-        <>
-          {
-            tokens > 0
-              ? <span>Tienes {tokens} tokens</span>
-              : <span>No tienes tokens</span>
-          }
-          <button className='bg-blue-600 py-2 px-4 rounded-lg' onClick={handleOpenModal}>Pagar</button>
-        </>
-      }
-      {
-        isOpen && (
-          <>
-          <div onClick={handleCloseModal} className="w-screen h-screen fixed top-0 left-0 bg-black/30 cursor-pointer"></div>
-          <div className="w-3/5 h-[250px] fixed top-0 left-0 right-0 bottom-0 m-auto px-4 py-4 rounded-lg shadow-lg bg-gray-800">
-            <button onClick={handleCloseModal} className='absolute top-2 right-4'>x</button>
-            <form onSubmit={handleSubmit(handlePay)} className='flex justify-center items-center gap-4'>
-              <input className='text-black rounded-lg px-4 py-1' type="number" placeholder='Tokens' defaultValue='1' min='1' max='50' {...register('quantity')} onChange={(e) => { handleChangeQuantity(e) }} />
-              {errors.quantity?.message != null && <span className='text-red-600'>{String(errors.quantity?.message)}</span>}
-              <span className='text-white'>{Number(priceValue).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 })}</span>
-              <button className='bg-blue-600 text-white' type='submit'>Pagar</button>
-            </form>
+          <div className='flex justify-center items-center gap-4 my-6'>
+                {
+                  tokens > 0
+                    ? <span>Tienes {tokens} tokens</span>
+                    : <span>No tienes tokens</span>
+                }
+                <button className='bg-blue-600 py-2 px-4 rounded-lg' onClick={handleOpenModal}>Pagar</button>
+            {
+              isOpen && (
+                <>
+                <div onClick={handleCloseModal} className="w-screen h-screen fixed top-0 left-0 bg-black/30 cursor-pointer"></div>
+                <div className="w-3/5 h-[250px] fixed top-0 left-0 right-0 bottom-0 m-auto px-4 py-4 rounded-lg shadow-lg bg-gray-800">
+                  <button onClick={handleCloseModal} className='absolute top-2 right-4'>x</button>
+                  <form onSubmit={handleSubmit(handlePay)} className='flex justify-center items-center gap-4'>
+                    <input className='text-black rounded-lg px-4 py-1' type="number" placeholder='Tokens' defaultValue='1' min='1' max='50' {...register('quantity')} onChange={(e) => { handleChangeQuantity(e) }} />
+                    {errors.quantity?.message != null && <span className='text-red-600'>{String(errors.quantity?.message)}</span>}
+                    <span className='text-white'>{Number(priceValue).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 })}</span>
+                    <button className='bg-blue-600 text-white' type='submit'>Pagar</button>
+                  </form>
+                </div>
+                </>
+              )
+            }
           </div>
-          </>
-        )
       }
-    </div>
+    </>
   )
 }
