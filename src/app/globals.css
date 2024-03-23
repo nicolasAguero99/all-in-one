@@ -1,3 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.custom-clip-path-msg::before {
+  clip-path: polygon(100% 0, 29% 46%, 100% 100%);
+}

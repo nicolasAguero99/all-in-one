@@ -48,7 +48,7 @@ export default function SwitchServices (): JSX.Element {
       <div className='w-fit flex items-center gap-4'>
         {
           SERVICES_DATA.map((service) => (
-            <button className={`${service.value === currentService ? 'bg-primary text-bckg' : ''} bg-bckg text-primary py-1 px-8 rounded-full border-[1px] border-primary z-20`} key={service.value} onClick={() => { handleChangeService(service.value) }}>
+            <button className={`${service.value === currentService ? 'bg-primary text-bckg' : 'bg-bckg text-primary'} py-1 px-8 rounded-full border-[1px] border-primary z-20`} key={service.value} onClick={() => { handleChangeService(service.value) }}>
               {service.name}
             </button>
           ))
