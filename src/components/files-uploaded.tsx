@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { shallow } from 'zustand/shallow'
 
 // Components
 import DeleteFile from '@/components/delete-file'
@@ -19,7 +20,17 @@ import ShareIcon from './icons/share-icon'
 // Constants
 import { FILE_TYPES } from '@/constants/constants'
 
-export default function FilesUploaded ({ files }: { files: FileData[] }): JSX.Element {
+// Illustration
+import RobotIllustration from './illustrations/robot-illustration'
+
+// Store
+import { errorStore } from '@/store/errorStore'
+
+export default function FilesUploaded ({ files, children }: { files: FileData[], children?: JSX.Element }): JSX.Element {
+  const { error } = errorStore((state) => ({
+    error: state.error
+  }), shallow)
+
   const handleShare = async (path: string): Promise<void> => {
     if (navigator.share != null) {
       await navigator.share({
@@ -31,13 +42,21 @@ export default function FilesUploaded ({ files }: { files: FileData[] }): JSX.El
   }
 
   return (
-    <main className='flex flex-col gap-4 py-6'>
-      <h1 className='text-6xl font-semibold text-center'>Subir archivos</h1>
+    <main className='flex flex-col justify-center gap-4 py-6 px-6'>
+      <div className='m-auto relative'>
+        <RobotIllustration error={error !== ''} />
+        {error !== '' && <span className='absolute top-0 bottom-0 my-auto -right-[320px] w-[300px] size-fit bg-primary text-bckg font-medium px-4 py-2 rounded-full shadow-lg before:absolute before:top-0 before:bottom-0 before:m-auto before:-left-[10px] before:size-4 before:bg-primary custom-clip-path-msg'>{error}</span>}
+      </div>
+      <h1 className='text-xl font-semibold text-center'>¿Qué vamos a hacer hoy?</h1>
+      {children}
       <PaymentBtn />
       <FormFiles />
-      <section className='flex flex-col items-center'>
-        <h2 className='my-6'>Archivos</h2>
-        <ul className='flex flex-wrap justify-center items-center gap-4 px-16'>
+      <section className='flex flex-col gap-4 w-full max-w-[1000px] bg-bckg m-auto rounded-lg shadow-md shadow-[#ffffff]/5 p-6 mt-6'>
+        <h2 className='flex gap-1 items-center text-xl font-semibold'>
+          <img src="/icons/image-icon.svg" alt="image icon" />
+          Archivos recientes
+        </h2>
+        <ul className='flex flex-wrap justify-center items-center gap-8 mt-8'>
           {
             files.length > 0
               ? files.map(file => {

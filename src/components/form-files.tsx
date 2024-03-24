@@ -37,6 +37,7 @@ export default function FormFiles (): JSX.Element {
   const [currentOrigin, setCurrentOrigin] = useState('')
   const [uploading, setUploading] = useState(false)
   const [customUrl, setCustomUrl] = useState('')
+  const [showInputCustomUrl, setShowInputCustomUrl] = useState(false)
   const [enabledCustomUrl, setEnabledCustomUrl] = useState(false)
   const [isValidateCustomUrl, setIsValidateCustomUrl] = useState<boolean | 'pending'>(false)
   const [showModalConfirm, setShowModalConfirm] = useState(false)
@@ -152,6 +153,10 @@ export default function FormFiles (): JSX.Element {
     e.target.checked ? setEnabledCustomUrl(true) : setEnabledCustomUrl(false)
   }
 
+  const handleType = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    e.target.value === '' ? setShowInputCustomUrl(false) : setShowInputCustomUrl(true)
+  }
+
   const handleCustomUrl = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     setIsValidateCustomUrl('pending')
     if (e.target.value.length > 20) return
@@ -202,15 +207,15 @@ export default function FormFiles (): JSX.Element {
     }
     {
       link === ''
-        ? <form onSubmit={handleShowModal} method='post' encType='multipart/form-data' className='flex flex-col gap-6 my-4'>
+        ? <form onSubmit={handleShowModal} method='post' encType='multipart/form-data' className='w-full max-w-[800px] flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
           {
             filePreview === ''
-              ? <label htmlFor="inputFile" className={`${(uploading || Number(tokens) < 1) ? 'opacity-30 cursor-not-allowed' : ''} flex justify-center items-center gap-6 px-8 py-10 border-[4px] border-white border-dashed rounded-md cursor-pointer`}>
-                  <img className='size-20' src="/icons/add-image-icon.svg" alt="agregar imagen" />
-                  <div className='flex flex-col gap-2'>
-                    <span className='text-lg font-semibold'>Agregar archivo</span>
-                    <span className='text-sm'>Agregue un archivo desde el equipo o arrastrelo</span>
-                  </div>
+              ? <label htmlFor="inputFile" className={`${(uploading || Number(tokens) < 1) ? 'opacity-30 cursor-not-allowed' : ''} w-[calc(100%-50px)] flex justify-center items-center gap-10 px-8 py-14 border-[4px] border-white border-dashed rounded-md cursor-pointer`}>
+                <img className='size-24' src="/icons/add-image-icon.svg" alt="agregar imagen" />
+                <div className='flex flex-col gap-2'>
+                  <span className='text-lg font-semibold'>Agregar archivo</span>
+                  <span className='text-sm'>Agregue un archivo desde el equipo o arrastrelo</span>
+                </div>
               </label>
               : <div className='relative'>
                 {
@@ -227,17 +232,17 @@ export default function FormFiles (): JSX.Element {
           }
           <input className='hidden' id='inputFile' type='file' accept="*" {...register('file', { onChange: handleChangeFile })} disabled={uploading || Number(tokens) < 1} />
           {errors.file?.message != null && <span className='text-red-600'>{String(errors.file?.message)}</span>}
-          <div className='flex gap-2'>
+          <div className='flex justify-center w-full gap-2 mt-8'>
             <div className='flex w-full relative'>
-              <input className='flex-1 relative px-4 bg-slate-200 text-black py-2 rounded-lg shadow-md transition-all ease-out duration-300 z-20 disabled:cursor-not-allowed' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Nombre del archivo'}`} {...register('name')} disabled={uploading || Number(tokens) < 1} />
-              <div className='top-7 absolute right-0 flex w-full transition-all ease-out duration-300'>
-                <div className='relative w-full'>
-                  <input className='absolute top-5 left-[10px] size-4 shadow-lg z-30 cursor-pointer' type="checkbox" onChange={handleCheckCustomUrl} />
-                  <input className='shadow-md relative w-full h-full px-10 bg-slate-200 text-black pt-4 pb-2 rounded-b-lg transition-all ease-out duration-300 z-10 disabled:opacity-30' type='text' placeholder='Url personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
+              <input className='w-full relative bg-primary text-secondary py-2 ps-10 rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20 disabled:cursor-not-allowed' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Nombre del archivo'}`} {...register('name')} onChange={handleType} disabled={uploading || Number(tokens) < 1} />
+              <div className={`${showInputCustomUrl ? 'top-9' : 'top-4'} absolute -left-1 w-full flex transition-all ease-out duration-300 z-10`}>
+                <div className={`${showInputCustomUrl ? '[&>*]:opacity-100' : '[&>*]:opacity-0'} relative w-full`}>
+                  <input className='absolute top-[19px] left-[16px] size-4 shadow-lg z-30 cursor-pointer' type="checkbox" onChange={handleCheckCustomUrl} />
+                  <input className={`${showInputCustomUrl ? 'pt-4 pb-3 disabled:opacity-50 text-primary' : 'disabled:opacity-100 placeholder:text-transparent text-transparent'} relative size-full px-11 py-2 bg-bckg w-[calc(100%+10px)] h-full border-[1px] border-primary rounded-full transition-all ease-out duration-300 z-10 disabled:opacity-50`} type='text' placeholder='Url personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
                 </div>
               </div>
+              <button disabled={uploading || Number(tokens) < 1} className={`${uploading ? 'opacity-50' : ''} absolute top-[1px] right-[1px] w-fit bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30`} type='submit' value='Upload'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
             </div>
-            <button disabled={uploading || Number(tokens) < 1} className={`${uploading ? 'opacity-50' : ''} bg-blue-400 text-white w-fit px-4 py-2 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed`} type='submit' value='Upload'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
           </div>
           <div className='flex flex-col justify-center items-center mt-10'>
             {

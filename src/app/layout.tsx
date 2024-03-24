@@ -23,7 +23,7 @@ export default function RootLayout ({
 }>): JSX.Element {
   return (
     <html lang='es'>
-      <body className={`${inter.className} bg-bckg text-primary p-6 bg-[url(/illustrations/bckg-illustration.svg)] bg-cover bg-center bg-no-repeat h-screen`}>
+      <body className={`${inter.className} bg-bckg text-primary p-6 bg-[url(/illustrations/bckg-illustration.svg)] bg-cover bg-center bg-fixed h-screen`}>
         <Nav />
         {children}
         <ToastContainer />
