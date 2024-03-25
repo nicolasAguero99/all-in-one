@@ -1,5 +1,6 @@
 // Components
 import MainPage from '@/components/main-page'
+import PaymentBtn from '@/components/payment-btn'
 import SwitchServices from '@/components/switch-services'
 
 // Types
@@ -15,6 +16,7 @@ export default async function FilesPage ({ searchParams }: { searchParams: { pay
   const allUrls = urlsUploaded.concat(urlsFromCookies)
   return (
     <MainPage searchParamsValue={searchParams} urlsUploaded={allUrls}>
+      <PaymentBtn />
       <SwitchServices />
     </MainPage>
   )

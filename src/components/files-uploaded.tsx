@@ -6,7 +6,6 @@ import { shallow } from 'zustand/shallow'
 // Components
 import DeleteFile from '@/components/delete-file'
 import FormFiles from '@/components/form-files'
-import PaymentBtn from '@/components/payment-btn'
 
 // Types
 import { type FileData } from '@/types/types'
@@ -26,7 +25,7 @@ import RobotIllustration from './illustrations/robot-illustration'
 // Store
 import { errorStore } from '@/store/errorStore'
 
-export default function FilesUploaded ({ files, children }: { files: FileData[], children?: JSX.Element }): JSX.Element {
+export default function FilesUploaded ({ files, children }: { files: FileData[], children?: JSX.Element[] }): JSX.Element {
   const { error } = errorStore((state) => ({
     error: state.error
   }), shallow)
@@ -49,7 +48,6 @@ export default function FilesUploaded ({ files, children }: { files: FileData[],
       </div>
       <h1 className='text-xl font-semibold text-center'>¿Qué vamos a hacer hoy?</h1>
       {children}
-      <PaymentBtn />
       <FormFiles />
       <section className='flex flex-col gap-4 w-full max-w-[1000px] bg-bckg m-auto rounded-lg shadow-md shadow-[#ffffff]/5 p-6 mt-6'>
         <h2 className='flex gap-1 items-center text-xl font-semibold'>
