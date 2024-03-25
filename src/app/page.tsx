@@ -1,5 +1,6 @@
 // Components
 import MainPage from '@/components/main-page'
+import PaymentBtn from '@/components/payment-btn'
 import SwitchServices from '@/components/switch-services'
 
 // Constants
@@ -15,6 +16,7 @@ export default async function App ({ searchParams }: { searchParams: { paymentSt
   const allUrls = urlsUploaded.concat(urlsFromCookies)
   return (
     <MainPage searchParamsValue={searchParams} urlsUploaded={allUrls}>
+      <PaymentBtn />
       <SwitchServices />
     </MainPage>
   )

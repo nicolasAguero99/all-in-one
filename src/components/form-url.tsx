@@ -20,7 +20,6 @@ import { errorStore } from '@/store/errorStore'
 
 // Components
 import ActionButtonsLink from './action-buttons-urls'
-import PaymentBtn from './payment-btn'
 
 // Services
 import { addUrlsShortenedCookies, isExistUrl } from '@/lib/services'
@@ -161,7 +160,6 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
 
   return (
     <section className='flex flex-col justify-center'>
-      <PaymentBtn />
       {
         showModalConfirm &&
         <>

@@ -17,7 +17,7 @@ import RobotIllustration from './illustrations/robot-illustration'
 import { errorStore } from '@/store/errorStore'
 import { useEffect } from 'react'
 
-export default function MainPage ({ searchParamsValue = null, urlsUploaded, children }: { searchParamsValue: { paymentStatus: typeof PAYMENT_STATUS[number] } | null, urlsUploaded: Array<{ url: string, longUrl: string }> | [], children?: JSX.Element }): JSX.Element {
+export default function MainPage ({ searchParamsValue = null, urlsUploaded, children }: { searchParamsValue: { paymentStatus: typeof PAYMENT_STATUS[number] } | null, urlsUploaded: Array<{ url: string, longUrl: string }> | [], children?: JSX.Element[] }): JSX.Element {
   const paymentStatus = searchParamsValue != null ? searchParamsValue.paymentStatus : null
   const { error } = errorStore((state) => ({
     error: state.error
