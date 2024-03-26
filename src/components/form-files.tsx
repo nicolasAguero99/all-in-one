@@ -179,18 +179,18 @@ export default function FormFiles (): JSX.Element {
       showModalConfirm &&
       <>
         <div onClick={() => { setShowModalConfirm(false) }} className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-40 cursor-pointer' />
-        <div className='absolute inset-0 w-1/2 h-fit m-auto flex flex-col items-center gap-6 py-8 bg-slate-500 rounded-lg z-50'>
+        <div className='w-3/5 h-[250px] flex flex-col justify-center fixed top-0 left-0 right-0 bottom-0 m-auto px-4 py-4 rounded-lg shadow-lg shadow-[#ffffff]/5 bg-bckg z-50'>
           {
             user.uid !== ''
               ? <>
-                  <div className='flex flex-col gap-6 items-center'>
-                    <span className='text-3xl font-semibold'>Acortar url</span>
-                    <p className='text-white/60'>¿Estás seguro de acortar la url? Gastarás 1 token</p>
+                <div className='flex flex-col gap-4 items-center'>
+                  <span className='text-3xl font-semibold'>Subir archivo</span>
+                  <p className='text-white/60'>¿Estás seguro de subir archivo? Gastarás 1 token</p>
                   </div>
-                  <div className='flex justify-between items-center gap-4'>
-                    <button className='text-blue-600 bg-white w-fit px-4 py-2 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Cancelar</button>
-                    <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={handleSubmit(onSubmit)}>Aceptar</button>
-                  </div>
+                  <div className='flex justify-center items-center gap-6 mt-10'>
+                    <button className='bg-bckg text-primary border-[1px] border-r-primary py-2 px-4 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Cancelar</button>
+                    <button className='bg-primary text-bckg py-2 px-4 rounded-lg' onClick={handleSubmit(onSubmit)}>Aceptar</button>
+                </div>
                 </>
               : <>
                 <div className='flex flex-col gap-6 items-center'>
