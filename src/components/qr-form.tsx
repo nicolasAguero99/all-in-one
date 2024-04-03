@@ -27,9 +27,6 @@ import ActionButtonsLink from './action-buttons-urls'
 import PasteIcon from './icons/paste-icon'
 import CrossIcon from './icons/cross-icon'
 
-// Utils
-import { showNotification } from '@/lib/utils'
-
 // Icons
 import DownloadIcon from './icons/download-icon'
 import RobotIllustration from './illustrations/robot-illustration'
@@ -44,8 +41,9 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
   const [isUploading, setUploading] = useState(false)
   const qrCodeRef = useRef<any>(null)
 
-  const { user } = userStore((state) => ({
-    user: state.user
+  const { user, tokens } = userStore((state) => ({
+    user: state.user,
+    tokens: state.tokens
   }), shallow)
 
   const { error } = errorStore((state) => ({
@@ -59,14 +57,18 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
   })
 
   useEffect(() => {
-    console.log('errors.longUrl?.message', errors.longUrl?.message)
-    if (errors.longUrl?.message != null) {
-      setShowModalConfirm(false)
-      setError(errors.longUrl?.message)
-      return
+    if (user.uid !== '') {
+      Number(tokens) < 1 && setError('No tienes tokens suficientes')
+      if (errors.longUrl?.message != null) {
+        setShowModalConfirm(false)
+        setError(errors.longUrl?.message)
+        return
+      }
+      setError(errors.longUrl?.message ?? '')
+    } else {
+      setError('Debes iniciar sesión')
     }
-    setError(errors.longUrl?.message ?? '')
-  }, [errors.longUrl?.message])
+  }, [user.uid, tokens, errors.longUrl?.message])
 
   useEffect(() => {
     if (qr === '') return
@@ -88,7 +90,8 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
     })
     if (res.status === 400) {
       const { error } = await res.json() as { error: string } ?? { error: 'Ha ocurrido un error' }
-      showNotification(error, 'error')
+      // showNotification(error, 'error')
+      setError(error)
       setUploading(false)
       return
     }
@@ -144,11 +147,7 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
     const extensionFile = 'jpg'
     const fileName = `${urlNameFormatted}-${qrName}.${extensionFile}`
     const blob = new Blob([svgString], { type: 'image/svg+xml' })
-    console.log('blob', blob)
     const blobUrl = URL.createObjectURL(blob)
-
-    console.log('blobUrl', blobUrl)
-
     // Svg to canvas to image
     const img = new Image()
     img.src = blobUrl
@@ -197,12 +196,12 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
                     </div>
                   </>
                 : <>
-                  <div className='flex flex-col gap-6 items-center'>
-                    <span className='text-3xl font-semibold'>Iniciar sesión</span>
-                    <p className='text-white/60'>Para realizar esta operación debes iniciar sesión y obtener tokens</p>
+                    <div className='flex flex-col gap-4 items-center'>
+                      <span className='text-3xl font-semibold'>Iniciar sesión</span>
+                      <p className='text-white/60'>Para realizar esta operación debes iniciar sesión y obtener tokens</p>
                     </div>
-                    <div className='flex justify-between items-center gap-4'>
-                      <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Aceptar</button>
+                    <div className='flex justify-center items-center gap-6 mt-10'>
+                      <button className='bg-primary text-bckg font-medium py-2 px-4 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Aceptar</button>
                     </div>
                   </>
             }
@@ -225,52 +224,56 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
           : <form onSubmit={handleShowModal} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
             <div className='relative w-full max-w-[800px] flex gap-4'>
               <div className='w-full relative after:absolute after:top-3 after:-left-1 after:px-11 after:py-2 after:bg-bckg after:w-[calc(100%+10px)] after:h-full after:border-[1px] after:border-primary after:rounded-full'>
-                <input className='w-full relative bg-primary text-secondary py-2 ps-10 rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20' type='text' placeholder="https://link-de-ejemplo" {...register('longUrl')} onChange={handleType} />
+                <input className='w-full relative bg-primary text-secondary py-2 ps-10 rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20' disabled={user?.uid === ''} type='text' placeholder="https://link-de-ejemplo" {...register('longUrl')} onChange={handleType} />
                 {
                   clearEnabled
                     ? <button onClick={handleClear} className='absolute top-[6px] left-1 text-white z-30' type='button'><CrossIcon /></button>
-                    : <button onClick={handlePaste} className='absolute top-[5px] left-1 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
+                    : <button onClick={handlePaste} className='absolute top-[5px] left-1 text-white z-30' type='button' disabled={user?.uid === ''}><PasteIcon isPasted={isPasted} /></button>
                 }
               </div>
-              <button className='absolute top-[1px] right-[1px] w-fit bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading}>{!isUploading ? 'Generar' : 'Generando...'}</button>
+              <button className='absolute top-[1px] right-[1px] w-fit bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30 disabled:cursor-not-allowed' type='submit' disabled={user?.uid === '' || showModalConfirm || isUploading}>{!isUploading ? 'Generar' : 'Generando...'}</button>
             </div>
           </form>
       }
-      <section className='flex flex-col gap-4 w-full max-w-[1000px] bg-bckg m-auto rounded-lg shadow-md shadow-[#ffffff]/5 p-6 mt-6'>
-        <h2 className='flex gap-2 items-center text-xl font-semibold'>
-          <img src="/icons/qr-icon.svg" alt="qr icon" />
-          QRs recientes
-        </h2>
-        {
-          qrsUrl.length > 0
-            ? <ul className='flex flex-wrap justify-center items-center gap-4 px-16 my-6'>
-                {
-                  qrsUrl.map(eachQr => {
-                    const urlDivided = eachQr.url.split('/')
-                    const urlHostFormatted = urlDivided[2]
-                    const urlPathFormatted = urlDivided[3]
+      {
+        user?.uid === ''
+          ? null
+          : <section className='flex flex-col gap-4 w-full max-w-[1000px] bg-bckg m-auto rounded-lg shadow-md shadow-[#ffffff]/5 p-6 mt-6'>
+          <h2 className='flex gap-2 items-center text-xl font-semibold'>
+            <img src="/icons/qr-icon.svg" alt="qr icon" />
+            QRs recientes
+          </h2>
+          {
+            qrsUrl.length > 0
+              ? <ul className='flex flex-wrap justify-center items-center gap-4 px-16 my-6'>
+                  {
+                    qrsUrl.map(eachQr => {
+                      const urlDivided = eachQr.url.split('/')
+                      const urlHostFormatted = urlDivided[2]
+                      const urlPathFormatted = urlDivided[3]
 
-                    return (
-                      <li key={eachQr.qr} className='relative flex flex-col overflow-hidden rounded-t-lg w-[250px] h-fit'>
-                        <Link href={`/${eachQr.url}`} className='flex justify-center items-center p-4 rounded-t-lg'>
-                          <QRCode value={eachQr.url ?? ''} size={200} ref={qrCodeRef} className='hover:scale-110 transition-all duration-300 ease-out' />
-                        </Link>
-                          <div className='relative flex flex-col gap-2 p-4 pt-8 bg-primary rounded-b-lg z-20'>
-                            <span className='text-black font-semibold'>{urlHostFormatted}</span>
-                            <small className='text-gray-600 text-sm h-6'>{urlPathFormatted}</small>
-                            <div className='flex justify-between items-center gap-4'>
-                              <ActionButtonsLink url={eachQr.qr} service={SERVICES_DATA[2].value} />
-                              <button className='shadow-md rounded-lg p-1 [&>svg]:size-6' onClick={() => { handleDownloadQRCode(eachQr.qr, eachQr.url) }}><DownloadIcon /></button>
+                      return (
+                        <li key={eachQr.qr} className='relative flex flex-col overflow-hidden rounded-t-lg w-[250px] h-fit'>
+                          <Link href={`/${eachQr.url}`} className='flex justify-center items-center p-4 rounded-t-lg'>
+                            <QRCode value={eachQr.url ?? ''} size={200} ref={qrCodeRef} className='hover:scale-110 transition-all duration-300 ease-out' />
+                          </Link>
+                            <div className='relative flex flex-col gap-2 p-4 pt-8 bg-primary rounded-b-lg z-20'>
+                              <span className='text-black font-semibold'>{urlHostFormatted}</span>
+                              <small className='text-gray-600 text-sm h-6'>{urlPathFormatted}</small>
+                              <div className='flex justify-between items-center gap-4'>
+                                <ActionButtonsLink url={eachQr.qr} service={SERVICES_DATA[2].value} />
+                                <button className='shadow-md rounded-lg p-1 [&>svg]:size-6' onClick={() => { handleDownloadQRCode(eachQr.qr, eachQr.url) }}><DownloadIcon /></button>
+                              </div>
                             </div>
-                          </div>
-                      </li>
-                    )
-                  })
-                }
-              </ul>
-            : <span className='text-center text-xl text-primary/50 py-6'>No hay QRs generados</span>
-        }
-      </section>
+                        </li>
+                      )
+                    })
+                  }
+                </ul>
+              : <span className='text-center text-xl text-primary/50 py-6'>No hay QRs generados</span>
+          }
+        </section>
+      }
     </main>
   )
 }

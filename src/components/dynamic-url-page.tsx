@@ -11,7 +11,6 @@ import { db } from '@/lib/firebase'
 import NotFound from '@/components/not-found'
 
 export default function DynamicUrlPage ({ paramsValue }: { paramsValue: { url: string } }): JSX.Element | undefined {
-  console.log('path', paramsValue)
   const { url } = paramsValue
   const [isExist, setIsExist] = useState(true)
   const router = useRouter()
@@ -27,7 +26,6 @@ export default function DynamicUrlPage ({ paramsValue }: { paramsValue: { url: s
         }
         const data = docSnap.data()
         router.replace(data.url as string)
-        console.log('data', data)
         return data
       } catch (error) {
         console.error('Error fetching data:', error)

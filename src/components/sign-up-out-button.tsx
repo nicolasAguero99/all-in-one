@@ -25,16 +25,9 @@ export default function SignUpOutButton (): JSX.Element {
   const { setUser, setTokens } = userStore()
 
   const handleSignUp = async (): Promise<void> => {
-    console.log('auth', auth)
     signInWithPopup(auth, provider)
       .then(async (result) => {
-        const credential = GoogleAuthProvider.credentialFromResult(result)
-        console.log('credential', credential)
-        const token = credential?.accessToken
-        console.log('token', token)
         const userCredentials = result.user
-        console.log('result', result)
-        console.log('userCredentials', userCredentials)
         const userData = {
           name: userCredentials.displayName ?? '',
           email: userCredentials.email ?? '',
@@ -44,10 +37,8 @@ export default function SignUpOutButton (): JSX.Element {
         setUser(userData)
         // Check if the user is new
         const tokensLength = !isNaN(await setUserDataCookies(userData)) ? await setUserDataCookies(userData) : 0
-        console.log('tokensLength', tokensLength)
         setTokens(tokensLength)
       }).catch((error) => {
-        console.log('error', error)
         return error
       })
   }

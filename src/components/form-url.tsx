@@ -63,17 +63,16 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
   }, [])
 
   useEffect(() => {
-    console.log('errors.longUrl?.message', errors.longUrl?.message)
+    errors.customUrl?.message != null && setShowModalConfirm(false)
     if (errors.longUrl?.message != null) {
       setShowModalConfirm(false)
       setError(errors.longUrl?.message)
       return
     }
     setError(errors.longUrl?.message ?? '')
-  }, [errors.longUrl?.message])
+  }, [errors.longUrl?.message, errors.customUrl?.message])
 
   useEffect(() => {
-    console.log('errors.customUrl?.message', errors.customUrl?.message)
     if (errors.customUrl?.message != null) {
       setError(errors.customUrl?.message)
     } else {
@@ -96,7 +95,6 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
       return
     }
     const shortUrl: string = await res.json()
-    console.log(shortUrl)
     if (user.uid === '') {
       await addUrlsShortenedCookies(shortUrl)
     }
@@ -167,7 +165,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
           <div className='w-3/5 h-[250px] flex flex-col justify-center fixed top-0 left-0 right-0 bottom-0 m-auto px-4 py-4 rounded-lg shadow-lg shadow-[#ffffff]/5 bg-bckg z-50'>
             {
               user.uid !== ''
-                ? <>
+                ? <div>
                     <div className='flex flex-col gap-4 items-center'>
                       <span className='text-3xl font-semibold'>Acortar url</span>
                       <p className='text-white/60'>¿Estás seguro de acortar url? Gastarás 1 token</p>
@@ -176,16 +174,16 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
                       <button className='bg-bckg text-primary border-[1px] border-r-primary py-2 px-4 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Cancelar</button>
                       <button className='bg-primary text-bckg py-2 px-4 rounded-lg' onClick={handleSubmit(onSubmit)}>Aceptar</button>
                     </div>
-                  </>
-                : <>
-                  <div className='flex flex-col gap-6 items-center'>
-                    <span className='text-3xl font-semibold'>Iniciar sesión</span>
-                    <p className='text-white/60'>Para realizar esta operación debes iniciar sesión y obtener tokens</p>
+                  </div>
+                : <div>
+                   <div className='flex flex-col gap-4 items-center'>
+                      <span className='text-3xl font-semibold'>Iniciar sesión</span>
+                      <p className='text-white/60'>Para realizar esta operación debes iniciar sesión y obtener tokens</p>
                     </div>
-                    <div className='flex justify-between items-center gap-4'>
-                      <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Aceptar</button>
+                    <div className='flex justify-center items-center gap-6 mt-10'>
+                      <button className='bg-primary text-bckg font-medium py-2 px-4 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Aceptar</button>
                     </div>
-                  </>
+                  </div>
             }
           </div>
         </>
@@ -222,7 +220,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
         url !== '' && (
           <div className='flex flex-col items-center justify-center gap-2 my-8'>
             <span className='text-xl font-semibold'>Nueva URL:</span>
-            <Link className='underline text-tertiary' href={`/${url}`} >/{url}</Link>
+            <Link className='underline text-tertiary' href={`/${url}`} >{currentOrigin}/{url}</Link>
             <small className='text-sm text-tertiary'>({currentLongUrl})</small>
           </div>
         )

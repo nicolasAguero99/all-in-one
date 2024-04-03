@@ -48,7 +48,6 @@ export default function PaymentBtn (): JSX.Element {
     const { quantity } = data
     const formData = new FormData()
     formData.append('quantity', quantity)
-    console.log('user.uid', user.uid)
     const res = await fetch(`${API_URL}/payment`, {
       method: 'POST',
       headers: {

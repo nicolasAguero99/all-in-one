@@ -17,7 +17,6 @@ import ExternalIcon from './icons/external-icon'
 import { FILE_TYPES } from '@/constants/constants'
 
 export default function DynamicFilePage ({ paramsValue }: { paramsValue: { path: string } }): JSX.Element | undefined {
-  console.log('path', paramsValue)
   const { path } = paramsValue
   const [fileType, setFileType] = useState({ type: '', extension: '' })
   const [file, setFile] = useState('')
@@ -39,7 +38,6 @@ export default function DynamicFilePage ({ paramsValue }: { paramsValue: { path:
         const fileRef = ref(storage, fileData?.fileName as string)
         const file = await getDownloadURL(fileRef)
         setFile(file)
-        console.log('file', file)
         setFileType({ type: fileData?.type.split('/')[0], extension: fileData?.type.split('/')[1] })
         return data
       } catch (error) {

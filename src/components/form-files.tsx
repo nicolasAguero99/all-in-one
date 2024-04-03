@@ -42,9 +42,6 @@ export default function FormFiles (): JSX.Element {
   const [isValidateCustomUrl, setIsValidateCustomUrl] = useState<boolean | 'pending'>(false)
   const [showModalConfirm, setShowModalConfirm] = useState(false)
 
-  const { error } = errorStore((state) => ({
-    error: state.error
-  }), shallow)
   const { setError } = errorStore()
 
   const { user, tokens } = userStore((state) => ({
@@ -52,7 +49,7 @@ export default function FormFiles (): JSX.Element {
     tokens: state.tokens
   }), shallow)
 
-  const { register, setValue, getValues, setError: setErrors, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
+  const { register, setValue, getValues, setError: setErrorForm, handleSubmit, formState: { errors } } = useForm<z.infer<typeof inputFiles>>({
     resolver: zodResolver(inputFiles)
   })
 
@@ -60,6 +57,21 @@ export default function FormFiles (): JSX.Element {
     if (typeof window === 'undefined') return
     setCurrentOrigin(`${window.location.origin}/f`)
   }, [])
+
+  useEffect(() => {
+    if (user.uid !== '') {
+      Number(tokens) < 1 && setError('No tienes tokens suficientes')
+      setError('')
+    } else {
+      setError('Debes iniciar sesión')
+    }
+  }, [user.uid, tokens])
+
+  useEffect(() => {
+    errors.file?.message != null
+      ? setError(errors.file?.message as string)
+      : setError('')
+  }, [errors.file?.message])
 
   useEffect(() => {
     if (link === '') return
@@ -113,18 +125,15 @@ export default function FormFiles (): JSX.Element {
     setShowModalConfirm(true)
     const file = getValues('file')
     const name = getValues('name') ?? ''
-    if (errors.name?.message != null) setErrors('name', { message: '' })
-    if (errors.file?.message != null) setErrors('file', { message: '' })
+    if (errors.name?.message != null) setErrorForm('name', { message: '' })
+    if (errors.file?.message != null) setErrorForm('file', { message: '' })
     try {
       inputFiles.parse({ file, name })
     } catch (error) {
       const { message } = (error as { errors: [{ message: string }] }).errors[0] ?? { message: 'Ha ocurrido un error' }
       const { path } = (error as { errors: [{ path: string }] }).errors[0]
-
-      console.log('path', path[0])
-
-      if (path[0] === 'file') setErrors('file', { message })
-      if (path[0] === 'name') setErrors('name', { message })
+      if (path[0] === 'file') setErrorForm('file', { message })
+      if (path[0] === 'name') setErrorForm('name', { message })
       setShowModalConfirm(false)
     }
   }
@@ -138,7 +147,6 @@ export default function FormFiles (): JSX.Element {
   const handleChangeFile = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files == null) return
     const file = e.target.files[0] ?? { name: '' }
-    console.log('file', file)
     setFileName(file.name)
     // Create a preview of the file
     const reader = new FileReader()
@@ -147,6 +155,24 @@ export default function FormFiles (): JSX.Element {
       setFileType({ type: file.type.split('/')[0], extension: file.type.split('/')[1] })
     }
     reader.readAsDataURL(file)
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>): void => {
+    e.preventDefault()
+    const file = e.dataTransfer.files[0] ?? { name: '' }
+    setValue('file', [e.dataTransfer.files[0]])
+    setFileName(file.name)
+    // Create a preview of the file
+    const reader = new FileReader()
+    reader.onloadend = function () {
+      setFilePreview(String(reader.result))
+      setFileType({ type: file.type.split('/')[0], extension: file.type.split('/')[1] })
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>): void => {
+    e.preventDefault()
   }
 
   const handleCheckCustomUrl = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -182,25 +208,25 @@ export default function FormFiles (): JSX.Element {
         <div className='w-3/5 h-[250px] flex flex-col justify-center fixed top-0 left-0 right-0 bottom-0 m-auto px-4 py-4 rounded-lg shadow-lg shadow-[#ffffff]/5 bg-bckg z-50'>
           {
             user.uid !== ''
-              ? <>
-                <div className='flex flex-col gap-4 items-center'>
-                  <span className='text-3xl font-semibold'>Subir archivo</span>
-                  <p className='text-white/60'>¿Estás seguro de subir archivo? Gastarás 1 token</p>
+              ? <div>
+                  <div className='flex flex-col gap-4 items-center'>
+                    <span className='text-3xl font-semibold'>Subir archivo</span>
+                    <p className='text-white/60'>¿Estás seguro de subir archivo? Gastarás 1 token</p>
                   </div>
                   <div className='flex justify-center items-center gap-6 mt-10'>
-                    <button className='bg-bckg text-primary border-[1px] border-r-primary py-2 px-4 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Cancelar</button>
-                    <button className='bg-primary text-bckg py-2 px-4 rounded-lg' onClick={handleSubmit(onSubmit)}>Aceptar</button>
+                      <button className='bg-bckg text-primary border-[1px] border-r-primary py-2 px-4 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Cancelar</button>
+                      <button className='bg-primary text-bckg py-2 px-4 rounded-lg' onClick={handleSubmit(onSubmit)}>Aceptar</button>
+                  </div>
                 </div>
-                </>
-              : <>
-                <div className='flex flex-col gap-6 items-center'>
-                  <span className='text-3xl font-semibold'>Iniciar sesión</span>
-                  <p className='text-white/60'>Para realizar esta operación debes iniciar sesión y obtener tokens</p>
+              : <div>
+                  <div className='flex flex-col gap-4 items-center'>
+                    <span className='text-3xl font-semibold'>Iniciar sesión</span>
+                    <p className='text-white/60'>Para realizar esta operación debes iniciar sesión y obtener tokens</p>
                   </div>
-                  <div className='flex justify-between items-center gap-4'>
-                    <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Aceptar</button>
+                  <div className='flex justify-center items-center gap-6 mt-10'>
+                    <button className='bg-primary text-bckg font-medium py-2 px-4 rounded-lg' onClick={() => { setShowModalConfirm(false) }}>Aceptar</button>
                   </div>
-                </>
+                </div>
           }
         </div>
       </>
@@ -210,7 +236,7 @@ export default function FormFiles (): JSX.Element {
         ? <form onSubmit={handleShowModal} method='post' encType='multipart/form-data' className='w-full max-w-[800px] flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
           {
             filePreview === ''
-              ? <label htmlFor="inputFile" className={`${(uploading || Number(tokens) < 1) ? 'opacity-30 cursor-not-allowed' : ''} w-[calc(100%-50px)] flex justify-center items-center gap-10 px-8 py-14 border-[4px] border-white border-dashed rounded-md cursor-pointer`}>
+              ? <label htmlFor="inputFile" onDragOver={handleDragOver} onDrop={handleDrop} className={`${(uploading || Number(tokens) < 1) ? 'opacity-30 cursor-not-allowed' : ''} w-[calc(100%-50px)] flex justify-center items-center gap-10 px-8 py-14 border-[4px] border-white border-dashed rounded-md cursor-pointer`}>
                 <img className='size-24' src="/icons/add-image-icon.svg" alt="agregar imagen" />
                 <div className='flex flex-col gap-2'>
                   <span className='text-lg font-semibold'>Agregar archivo</span>
@@ -231,7 +257,7 @@ export default function FormFiles (): JSX.Element {
                 </div>
           }
           <input className='hidden' id='inputFile' type='file' accept="*" {...register('file', { onChange: handleChangeFile })} disabled={uploading || Number(tokens) < 1} />
-          {errors.file?.message != null && <span className='text-red-600'>{String(errors.file?.message)}</span>}
+          {/* {errors.file?.message != null && <span className='text-red-600'>{String(errors.file?.message)}</span>} */}
           <div className='flex justify-center w-full gap-2 mt-8'>
             <div className='flex w-full relative'>
               <input className='w-full relative bg-primary text-secondary py-2 ps-10 rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20 disabled:cursor-not-allowed' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Nombre del archivo'}`} {...register('name')} onChange={handleType} disabled={uploading || Number(tokens) < 1} />
@@ -257,20 +283,14 @@ export default function FormFiles (): JSX.Element {
               </div>
             }
           </div>
-          {errors.name?.message != null && <span className='text-red-600'>{String(errors.name?.message)}</span>}
-          {error != null && <p className='text-red-600'>{error}</p>}
-          {
-            user.uid !== ''
-              ? Number(tokens) < 1 && <span className='text-red-600'>No tienes tokens suficientes</span>
-              : <span className='text-red-600'>Debes iniciar sesión</span>
-          }
+          {/* {errors.name?.message != null && <span className='text-red-600'>{String(errors.name?.message)}</span>} */}
+          {/* {error != null && <p className='text-red-600'>{error}</p>} */}
         </form>
         : <section className='flex flex-col items-center gap-4'>
-            <span>¡Listo!</span>
-            <p>Link generado:</p>
+            <span className='text-xl font-semibold'>¡Listo!</span>
             {
               (fileType.type === FILE_TYPES.IMAGE || fileType.type === FILE_TYPES.VIDEO)
-                ? <Link className='underline text-blue-600' href={`/f/${link}`}>
+                ? <Link className='underline text-tertiary' href={`/f/${link}`}>
                   {
                     fileType.type === FILE_TYPES.IMAGE
                       ? <img className='w-[500px] h-[200px] aspect-video object-cover rounded-lg my-6' src={filePreview} alt='file uploaded' />
@@ -279,9 +299,9 @@ export default function FormFiles (): JSX.Element {
                         </video>
                   }
                   </Link>
-                : <Link className='underline text-blue-600' href={`/${link}`}>{link}</Link>
+                : <Link className='underline text-tertiary' href={`/${link}`}>{link}</Link>
             }
-            <button onClick={handleResetForm} className='bg-blue-400 text-white w-fit px-4 py-2 rounded-lg'>Subir más</button>
+            <button onClick={handleResetForm} className='bg-primary text-bckg font-medium w-fit px-4 py-2 rounded-lg'>Subir otro</button>
           </section>
     }
     </section>

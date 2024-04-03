@@ -19,7 +19,6 @@ export default function DeleteFile ({ pathId, fileName, type }: { pathId: string
   }), shallow)
 
   const handleDelete = async (): Promise<void> => {
-    console.log('delete file')
     await fetch(`${API_URL}/paths/${pathId}`, {
       method: 'DELETE',
       headers: {

@@ -11,8 +11,6 @@ export default function PaymentModal ({ paymentStatus }: { paymentStatus: typeof
   const quantity = typeof window !== 'undefined' ? (localStorage.getItem('quantity') != null ? localStorage.getItem('quantity') : null) : null
   useEffect(() => {
     const checkApproved = paymentStatus === PAYMENT_STATUS[0] ? PAYMENT_STATUS[0] : paymentStatus === PAYMENT_STATUS[1] ? PAYMENT_STATUS[1] : null
-    console.log('checkApproved', checkApproved)
-
     setIsApproved(checkApproved)
   }, [search])
 
