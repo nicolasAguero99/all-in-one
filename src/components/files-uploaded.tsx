@@ -73,7 +73,7 @@ export default function FilesUploaded ({ files, children }: { files: FileData[],
                     const [day, month] = formattedDate(file.createdAt)
                     const sizeFormatted = filesSizesToKb(file.size)
                     return (
-                      <li key={file.link} className='relative flex flex-col overflow-hidden rounded-t-lg'>
+                      <li key={file.link} className='relative flex flex-col overflow-hidden rounded-t-lg max-w-[250px]'>
                         <DeleteFile pathId={file.link} fileName={file.fileName} type={type} />
                         <Link href={`${linkType}${file.link}`} className='[&>img]:hover:scale-110'>
                           {
@@ -85,7 +85,7 @@ export default function FilesUploaded ({ files, children }: { files: FileData[],
                           }
                         </Link>
                           <div className='relative flex flex-col gap-2 p-4 pt-8 bg-slate-50 rounded-b-lg z-20'>
-                            <span className='text-black font-semibold capitalize'>{file.name}</span>
+                            <span className='text-black font-semibold capitalize w-[95%] text-ellipsis whitespace-nowrap overflow-x-hidden'>{file.name}</span>
                             <div className='flex justify-between items-center gap-4'>
                               <span className='text-gray-500 text-sm'>{sizeFormatted} kb</span>
                               <button className='shadow-md rounded-lg p-1 [&>svg]:size-6' onClick={() => { void handleShare(file.link) }}><ShareIcon color={'000000'} /></button>
