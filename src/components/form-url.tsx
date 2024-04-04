@@ -27,6 +27,7 @@ import { addUrlsShortenedCookies, isExistUrl } from '@/lib/services'
 // Icons
 import PasteIcon from './icons/paste-icon'
 import CrossIcon from './icons/cross-icon'
+import SendIcon from './icons/send-icon'
 
 // Utils
 import { showNotification } from '@/lib/utils'
@@ -191,8 +192,8 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
       <form onSubmit={(!enabledCustomUrl && customUrl === '') ? handleSubmit(onSubmit) : handleShowModal} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
         <div className='flex w-full max-w-[800px] gap-4'>
           <div className='relative w-full'>
-            <input className='w-full relative bg-primary text-secondary py-2 ps-10 rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20' type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} onChange={handleType} />
-            <div className={`${clearEnabled ? 'top-9' : 'top-4'} absolute -left-1 w-full flex transition-all ease-out duration-300 z-10`}>
+            <input className='w-full h-[42px] relative bg-primary text-secondary py-2 ps-10 max-[500px]:ps-4 max-[500px]:text-sm rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20' type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} onChange={handleType} />
+            <div className={`${clearEnabled ? 'top-9' : 'top-4'} absolute -left-1 w-full flex max-[500px]:text-sm transition-all ease-out duration-300 z-10`}>
               <div className={`${clearEnabled ? '[&>*]:opacity-100' : '[&>*]:opacity-0'} relative w-full`}>
                 <input className='absolute top-[19px] left-[16px] size-4 shadow-lg z-30 cursor-pointer transition-all ease-out duration-300' type="checkbox" onChange={handleCheckCustomUrl} />
                 <input className={`${clearEnabled ? 'pt-4 pb-3 disabled:opacity-50 text-primary' : 'disabled:opacity-100 placeholder:text-transparent text-transparent'} relative size-full px-11 py-2 bg-bckg w-[calc(100%+10px)] h-full border-[1px] border-primary rounded-full transition-all ease-out duration-300 z-10 disabled:opacity-50`} type='text' placeholder='Ingresa una URL personalizada' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
@@ -200,10 +201,11 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
             </div>
             {
               clearEnabled
-                ? <button onClick={handleClear} className='absolute top-[7px] left-2 text-white z-30' type='button'><CrossIcon /></button>
-                : <button onClick={handlePaste} className='absolute top-[5px] left-2 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
+                ? <button onClick={handleClear} className='max-[500px]:hidden absolute top-[7px] left-2 text-white z-30' type='button'><CrossIcon /></button>
+                : <button onClick={handlePaste} className='max-[500px]:hidden absolute top-[5px] left-2 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
             }
-            <button className='absolute top-[1px] right-[1px] w-fit bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}>{!isUploading ? 'Acortar' : 'Acortando...'}</button>
+            <button className='max-[499px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}>{!isUploading ? 'Acortar' : 'Acortando...'}</button>
+            <button className='min-[500px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-4 py-2 rounded-full z-30 disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}><SendIcon /></button>
           </div>
         </div>
         {
@@ -243,7 +245,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
                   ))
                 }
               </ul>
-            : <span className='text-center text-xl text-primary/50 py-6'>No hay URLs acortados</span>
+            : <span className='text-center sm:text-lg text-primary/50 py-6'>No hay URLs acortados</span>
         }
       </section>
     </section>

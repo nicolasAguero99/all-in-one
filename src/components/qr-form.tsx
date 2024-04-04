@@ -30,6 +30,7 @@ import CrossIcon from './icons/cross-icon'
 // Icons
 import DownloadIcon from './icons/download-icon'
 import RobotIllustration from './illustrations/robot-illustration'
+import SendIcon from './icons/send-icon'
 
 export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: string, url: string }>, children: JSX.Element[] }): JSX.Element {
   const router = useRouter()
@@ -213,10 +214,10 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
           ? <div className='relative w-fit h-fit flex flex-col gap-6 m-auto px-14 py-6'>
               <QRCode className='m-auto' value={url} size={200} />
               <div className='flex items-center gap-4'>
-                <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={() => { handleDownloadQRCode(qr, url) }}>
+                <button className='bg-bckg text-primary font-medium w-fit px-4 py-2 rounded-lg' onClick={() => { handleDownloadQRCode(qr, url) }}>
                   Descargar
                 </button>
-                <button className='bg-blue-600 text-white w-fit px-4 py-2 rounded-lg' onClick={handleCloseQr}>
+                <button className='bg-bckg text-primary font-medium w-fit px-4 py-2 rounded-lg' onClick={handleCloseQr}>
                   Generar otro
                 </button>
               </div>
@@ -224,14 +225,15 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
           : <form onSubmit={handleShowModal} method='post' className='flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
             <div className='relative w-full max-w-[800px] flex gap-4'>
               <div className='w-full relative after:absolute after:top-3 after:-left-1 after:px-11 after:py-2 after:bg-bckg after:w-[calc(100%+10px)] after:h-full after:border-[1px] after:border-primary after:rounded-full'>
-                <input className='w-full relative bg-primary text-secondary py-2 ps-10 rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20' disabled={user?.uid === ''} type='text' placeholder="https://link-de-ejemplo" {...register('longUrl')} onChange={handleType} />
+                <input className='w-full h-[42px] relative bg-primary text-secondary py-2 ps-10 max-[500px]:ps-4 max-[500px]:text-sm  rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20' disabled={user?.uid === ''} type='text' placeholder="https://link-de-ejemplo" {...register('longUrl')} onChange={handleType} />
                 {
                   clearEnabled
-                    ? <button onClick={handleClear} className='absolute top-[6px] left-1 text-white z-30' type='button'><CrossIcon /></button>
-                    : <button onClick={handlePaste} className='absolute top-[5px] left-1 text-white z-30' type='button' disabled={user?.uid === ''}><PasteIcon isPasted={isPasted} /></button>
+                    ? <button onClick={handleClear} className='max-[500px]:hidden absolute top-[6px] left-1 text-white z-30' type='button'><CrossIcon /></button>
+                    : <button onClick={handlePaste} className='max-[500px]:hidden absolute top-[5px] left-1 text-white z-30' type='button' disabled={user?.uid === ''}><PasteIcon isPasted={isPasted} /></button>
                 }
               </div>
-              <button className='absolute top-[1px] right-[1px] w-fit bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30 disabled:cursor-not-allowed' type='submit' disabled={user?.uid === '' || showModalConfirm || isUploading}>{!isUploading ? 'Generar' : 'Generando...'}</button>
+              <button className='max-[499px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30 disabled:cursor-not-allowed' type='submit' disabled={user?.uid === '' || showModalConfirm || isUploading}>{!isUploading ? 'Generar' : 'Generando...'}</button>
+              <button className='min-[500px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30 disabled:cursor-not-allowed' type='submit' disabled={user?.uid === '' || showModalConfirm || isUploading}><SendIcon /></button>
             </div>
           </form>
       }
