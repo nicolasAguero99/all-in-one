@@ -22,6 +22,7 @@ import { errorStore } from '@/store/errorStore'
 
 // Components
 import ActionButtonsLink from './action-buttons-urls'
+import RobotError from './robot-error'
 
 // Icons
 import PasteIcon from './icons/paste-icon'
@@ -29,7 +30,6 @@ import CrossIcon from './icons/cross-icon'
 
 // Icons
 import DownloadIcon from './icons/download-icon'
-import RobotIllustration from './illustrations/robot-illustration'
 import SendIcon from './icons/send-icon'
 
 export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: string, url: string }>, children: JSX.Element[] }): JSX.Element {
@@ -45,10 +45,6 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
   const { user, tokens } = userStore((state) => ({
     user: state.user,
     tokens: state.tokens
-  }), shallow)
-
-  const { error } = errorStore((state) => ({
-    error: state.error
   }), shallow)
 
   const { setError } = errorStore()
@@ -170,10 +166,7 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
 
   return (
     <main className='flex flex-col justify-center gap-4 py-6 px-6'>
-      <div className='m-auto relative'>
-        <RobotIllustration error={error !== ''} />
-        {error !== '' && <span className='absolute top-0 bottom-0 my-auto -right-[320px] w-[300px] size-fit bg-primary text-bckg font-medium px-4 py-2 rounded-full shadow-lg before:absolute before:top-0 before:bottom-0 before:m-auto before:-left-[10px] before:size-4 before:bg-primary custom-clip-path-msg'>{error}</span>}
-      </div>
+      <RobotError />
       <h1 className='text-xl font-semibold text-center'>¿Qué vamos a hacer hoy?</h1>
       {children}
       {

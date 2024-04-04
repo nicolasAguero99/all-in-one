@@ -21,6 +21,7 @@ import { API_URL, FILE_TYPES } from '@/constants/constants'
 
 // Icons
 import CrossIcon from './icons/cross-icon'
+import SendIcon from './icons/send-icon'
 
 // Services
 import { isExistUrl } from '@/lib/services'
@@ -37,7 +38,7 @@ export default function FormFiles (): JSX.Element {
   const [currentOrigin, setCurrentOrigin] = useState('')
   const [uploading, setUploading] = useState(false)
   const [customUrl, setCustomUrl] = useState('')
-  const [showInputCustomUrl, setShowInputCustomUrl] = useState(false)
+  // const [showInputCustomUrl, setShowInputCustomUrl] = useState(false)
   const [enabledCustomUrl, setEnabledCustomUrl] = useState(false)
   const [isValidateCustomUrl, setIsValidateCustomUrl] = useState<boolean | 'pending'>(false)
   const [showModalConfirm, setShowModalConfirm] = useState(false)
@@ -179,9 +180,9 @@ export default function FormFiles (): JSX.Element {
     e.target.checked ? setEnabledCustomUrl(true) : setEnabledCustomUrl(false)
   }
 
-  const handleType = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    e.target.value === '' ? setShowInputCustomUrl(false) : setShowInputCustomUrl(true)
-  }
+  // const handleType = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  //   e.target.value === '' ? setShowInputCustomUrl(false) : setShowInputCustomUrl(true)
+  // }
 
   const handleCustomUrl = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     setIsValidateCustomUrl('pending')
@@ -236,11 +237,11 @@ export default function FormFiles (): JSX.Element {
         ? <form onSubmit={handleShowModal} method='post' encType='multipart/form-data' className='w-full max-w-[800px] flex flex-col justify-center items-center gap-2 mt-4 mb-12'>
           {
             filePreview === ''
-              ? <label htmlFor="inputFile" onDragOver={handleDragOver} onDrop={handleDrop} className={`${(uploading || Number(tokens) < 1) ? 'opacity-30 cursor-not-allowed' : ''} w-[calc(100%-50px)] flex justify-center items-center gap-10 px-8 py-14 border-[4px] border-white border-dashed rounded-md cursor-pointer`}>
+              ? <label htmlFor="inputFile" onDragOver={handleDragOver} onDrop={handleDrop} className={`${(uploading || Number(tokens) < 1) ? 'opacity-30 cursor-not-allowed' : ''} w-full min-[600px]:w-[calc(100%-50px)] flex max-[600px]:flex-col justify-center items-center gap-2 min-[600px]:gap-10 px-8 py-8 min-[600px]:py-14 border-[4px] border-white border-dashed rounded-md cursor-pointer`}>
                 <img className='size-24' src="/icons/add-image-icon.svg" alt="agregar imagen" />
-                <div className='flex flex-col gap-2'>
+                <div className='flex flex-col gap-2 max-[600px]:text-center'>
                   <span className='text-lg font-semibold'>Agregar archivo</span>
-                  <span className='text-sm'>Agregue un archivo desde el equipo o arrastrelo</span>
+                  <span className='text-sm'>Agregue un archivo desde el equipo <span className='max-[600px]:hidden'>o arrastrelo</span></span>
                 </div>
               </label>
               : <div className='relative'>
@@ -256,26 +257,27 @@ export default function FormFiles (): JSX.Element {
                   </button>
                 </div>
           }
-          <input className='hidden' id='inputFile' type='file' accept="*" {...register('file', { onChange: handleChangeFile })} disabled={uploading || Number(tokens) < 1} />
+          <input className='hidden' id='inputFile' type='file' accept="image/*, video/*, application/pdf" {...register('file', { onChange: handleChangeFile })} disabled={uploading || Number(tokens) < 1} />
           {/* {errors.file?.message != null && <span className='text-red-600'>{String(errors.file?.message)}</span>} */}
           <div className='flex justify-center w-full gap-2 mt-8'>
             <div className='flex w-full relative'>
-              <input className='w-full relative bg-primary text-secondary py-2 ps-10 rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20 disabled:cursor-not-allowed' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Nombre del archivo'}`} {...register('name')} onChange={handleType} disabled={uploading || Number(tokens) < 1} />
-              <div className={`${showInputCustomUrl ? 'top-9' : 'top-4'} absolute -left-1 w-full flex transition-all ease-out duration-300 z-10`}>
-                <div className={`${showInputCustomUrl ? '[&>*]:opacity-100' : '[&>*]:opacity-0'} relative w-full`}>
+              <input className='w-full h-[42px] relative bg-primary text-secondary py-2 ps-10 max-[500px]:ps-4 max-[500px]:text-sm rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20 disabled:cursor-not-allowed' type='text' placeholder={`${fileName !== '' ? `${fileName} (por defecto)` : 'Nombre del archivo (opcional)'}`} {...register('name')} disabled={uploading || Number(tokens) < 1} />
+              <div className={`${fileName !== '' ? 'top-9' : 'top-4'} absolute -left-1 w-full flex transition-all ease-out duration-300 z-10`}>
+                <div className={`${fileName !== '' ? '[&>*]:opacity-100' : '[&>*]:opacity-0'} relative w-full`}>
                   <input className='absolute top-[19px] left-[16px] size-4 shadow-lg z-30 cursor-pointer' type="checkbox" onChange={handleCheckCustomUrl} />
-                  <input className={`${showInputCustomUrl ? 'pt-4 pb-3 disabled:opacity-50 text-primary' : 'disabled:opacity-100 placeholder:text-transparent text-transparent'} relative size-full px-11 py-2 bg-bckg w-[calc(100%+10px)] h-full border-[1px] border-primary rounded-full transition-all ease-out duration-300 z-10 disabled:opacity-50`} type='text' placeholder='Url personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
+                  <input className={`${fileName !== '' ? 'pt-4 pb-3 disabled:opacity-50 text-primary' : 'disabled:opacity-100 placeholder:text-transparent text-transparent'} relative size-full px-11 py-2 bg-bckg w-[calc(100%+10px)] h-full max-[500px]:text-sm border-[1px] border-primary rounded-full transition-all ease-out duration-300 z-10 disabled:opacity-50`} type='text' placeholder='URL personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
                 </div>
               </div>
-              <button disabled={uploading || Number(tokens) < 1} className={`${uploading ? 'opacity-50' : ''} absolute top-[1px] right-[1px] w-fit bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30`} type='submit' value='Upload'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
+              <button disabled={uploading || Number(tokens) < 1 || fileName === ''} className={`${uploading ? 'opacity-50' : ''} max-[499px]:hidden absolute top-[1px] right-[1px] w-fit bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30`} type='submit'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
+              <button className={`${uploading ? 'opacity-50' : ''} min-[500px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-4 py-2 rounded-full z-30 disabled:opacity-30`} type='submit' disabled={uploading || Number(tokens) < 1 || fileName === ''}><SendIcon /></button>
             </div>
           </div>
           <div className='flex flex-col justify-center items-center mt-10'>
             {
               enabledCustomUrl && <div className='flex flex-col justify-center items-center text-lg'>
-                <div className={`${isValidateCustomUrl === true ? 'text-green-500' : 'text-red-500'} flex items-center`}>
-                  <small>{currentOrigin}/</small><span>{customUrl}</span>
-                </div>
+                <span className={`${isValidateCustomUrl === true ? 'text-green-500' : 'text-red-500'} flex items-center text-sm mt-6`}>
+                 {currentOrigin}/{customUrl}
+                </span>
                 {
                   (isValidateCustomUrl === false && customUrl !== '') && <span className='text-sm text-red-500'>Url no disponible</span>
                 }

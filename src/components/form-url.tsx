@@ -193,10 +193,10 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
         <div className='flex w-full max-w-[800px] gap-4'>
           <div className='relative w-full'>
             <input className='w-full h-[42px] relative bg-primary text-secondary py-2 ps-10 max-[500px]:ps-4 max-[500px]:text-sm rounded-full border-[1px] border-primary transition-all ease-out duration-300 z-20' type='text' placeholder="https://link-largo-de-ejemplo" {...register('longUrl')} onChange={handleType} />
-            <div className={`${clearEnabled ? 'top-9' : 'top-4'} absolute -left-1 w-full flex max-[500px]:text-sm transition-all ease-out duration-300 z-10`}>
+            <div className={`${clearEnabled ? 'top-9' : 'top-4'} absolute -left-1 w-full flex transition-all ease-out duration-300 z-10`}>
               <div className={`${clearEnabled ? '[&>*]:opacity-100' : '[&>*]:opacity-0'} relative w-full`}>
                 <input className='absolute top-[19px] left-[16px] size-4 shadow-lg z-30 cursor-pointer transition-all ease-out duration-300' type="checkbox" onChange={handleCheckCustomUrl} />
-                <input className={`${clearEnabled ? 'pt-4 pb-3 disabled:opacity-50 text-primary' : 'disabled:opacity-100 placeholder:text-transparent text-transparent'} relative size-full px-11 py-2 bg-bckg w-[calc(100%+10px)] h-full border-[1px] border-primary rounded-full transition-all ease-out duration-300 z-10 disabled:opacity-50`} type='text' placeholder='Ingresa una URL personalizada' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
+                <input className={`${clearEnabled ? 'pt-4 pb-3 disabled:opacity-50 text-primary' : 'disabled:opacity-100 placeholder:text-transparent text-transparent'} relative size-full px-11 py-2 bg-bckg w-[calc(100%+10px)] h-full max-[500px]:text-sm border-[1px] border-primary rounded-full transition-all ease-out duration-300 z-10 disabled:opacity-50`} type='text' placeholder='URL personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
               </div>
             </div>
             {
