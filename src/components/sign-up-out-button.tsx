@@ -54,7 +54,7 @@ export default function SignUpOutButton (): JSX.Element {
     <>
       {
         (user != null && user?.name !== '')
-          ? <div className='w-fit flex items-center gap-8 px-4 py-2 rounded-lg'>
+          ? <div className='w-fit flex items-center gap-4 py-2 rounded-lg'>
               <div className='flex gap-4 items-center'>
                 {
                   user.photo !== '' && <img src={user.photo} alt={user.name} className='size-8 rounded-full' referrerPolicy='no-referrer' />
@@ -63,9 +63,9 @@ export default function SignUpOutButton (): JSX.Element {
               </div>
               <button onClick={handleLogOut}><LogOutIcon /></button>
             </div>
-          : <div className='w-fit flex items-center gap-8 px-4 py-2 rounded-lg'>
+          : <div className='w-fit flex items-center gap-8 py-2 rounded-lg'>
               <button onClick={handleSignUp} className='flex items-center gap-2 bg-bckg text-primary py-2 px-6 rounded-full border-[1px] border-primary'>
-                <GoogleIcon /> Iniciar sesión
+                <GoogleIcon /> <span className='max-[450px]:hidden'>Iniciar sesión</span>
               </button>
             </div>
       }

@@ -62,17 +62,16 @@ export default function FormFiles (): JSX.Element {
   useEffect(() => {
     if (user.uid !== '') {
       Number(tokens) < 1 && setError('No tienes tokens suficientes')
-      setError('')
+      if (errors.file?.message != null) {
+        setShowModalConfirm(false)
+        setError(errors.file?.message as string)
+        return
+      }
+      setError(errors.file?.message ?? '')
     } else {
       setError('Debes iniciar sesión')
     }
-  }, [user.uid, tokens])
-
-  useEffect(() => {
-    errors.file?.message != null
-      ? setError(errors.file?.message as string)
-      : setError('')
-  }, [errors.file?.message])
+  }, [user.uid, tokens, errors.file?.message])
 
   useEffect(() => {
     if (link === '') return
