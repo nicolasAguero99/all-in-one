@@ -9,8 +9,8 @@ import 'react-toastify/dist/ReactToastify.css'
 import Nav from '@/components/nav'
 
 export const metadata: Metadata = {
-  title: 'All in one',
-  description: 'All in one is a page for all your needs, short urls, upload files in the cloud and generate qr'
+  title: 'All in one - Url File QR',
+  description: 'Acorta tus URLs, sube tus archivos a la nube y genera tu QR, todo en un solo lugar.'
 }
 
 export default function RootLayout ({

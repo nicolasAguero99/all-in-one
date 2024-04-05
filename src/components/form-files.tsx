@@ -267,8 +267,8 @@ export default function FormFiles (): JSX.Element {
                   <input className={`${fileName !== '' ? 'pt-4 pb-3 disabled:opacity-50 text-primary' : 'disabled:opacity-100 placeholder:text-transparent text-transparent'} relative size-full px-11 py-2 bg-bckg w-[calc(100%+10px)] h-full max-[500px]:text-sm border-[1px] border-primary rounded-full transition-all ease-out duration-300 z-10 disabled:opacity-50`} type='text' placeholder='URL personalizado' disabled={!enabledCustomUrl} {...register('customUrl')} onChange={handleCustomUrl} value={customUrl} />
                 </div>
               </div>
-              <button disabled={uploading || Number(tokens) < 1 || fileName === ''} className={`${uploading ? 'opacity-50' : ''} max-[499px]:hidden absolute top-[1px] right-[1px] w-fit bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30`} type='submit'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
-              <button className={`${uploading ? 'opacity-50' : ''} min-[500px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-4 py-2 rounded-full z-30 disabled:opacity-30`} type='submit' disabled={uploading || Number(tokens) < 1 || fileName === ''}><SendIcon /></button>
+              <button disabled={uploading || Number(tokens) < 1 || fileName === ''} className={`${uploading ? 'bg-disable' : ''} max-[499px]:hidden absolute top-[1px] right-[1px] w-fit bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:bg-disable`} type='submit'>{!uploading ? 'Subir' : 'Subiendo...'}</button>
+              <button className={`${uploading ? 'bg-disable' : ''} min-[500px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-4 py-2 rounded-full z-30 disabled:bg-disable`} type='submit' disabled={uploading || Number(tokens) < 1 || fileName === ''}><SendIcon /></button>
             </div>
           </div>
           <div className='flex flex-col justify-center items-center mt-10'>

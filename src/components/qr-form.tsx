@@ -225,8 +225,8 @@ export default function QrForm ({ qrsUrl, children }: { qrsUrl: Array<{ qr: stri
                     : <button onClick={handlePaste} className='max-[500px]:hidden absolute top-[5px] left-1 text-white z-30' type='button' disabled={user?.uid === ''}><PasteIcon isPasted={isPasted} /></button>
                 }
               </div>
-              <button className='max-[499px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30 disabled:cursor-not-allowed' type='submit' disabled={user?.uid === '' || showModalConfirm || isUploading}>{!isUploading ? 'Generar' : 'Generando...'}</button>
-              <button className='min-[500px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30 disabled:cursor-not-allowed' type='submit' disabled={user?.uid === '' || showModalConfirm || isUploading}><SendIcon /></button>
+              <button className='max-[499px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:bg-disable disabled:cursor-not-allowed' type='submit' disabled={user?.uid === '' || showModalConfirm || isUploading}>{!isUploading ? 'Generar' : 'Generando...'}</button>
+              <button className='min-[500px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:bg-disable disabled:cursor-not-allowed' type='submit' disabled={user?.uid === '' || showModalConfirm || isUploading}><SendIcon /></button>
             </div>
           </form>
       }

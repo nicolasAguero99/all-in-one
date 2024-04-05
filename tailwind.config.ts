@@ -17,7 +17,8 @@ const config: Config = {
         bckg: '#111111',
         primary: '#F5F5F5',
         secondary: '#1C1C1C',
-        tertiary: '#D1D1D1'
+        tertiary: '#D1D1D1',
+        disable: '#4F4F4F'
       }
     }
   },

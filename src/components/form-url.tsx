@@ -204,8 +204,8 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
                 ? <button onClick={handleClear} className='max-[500px]:hidden absolute top-[7px] left-2 text-white z-30' type='button'><CrossIcon /></button>
                 : <button onClick={handlePaste} className='max-[500px]:hidden absolute top-[5px] left-2 text-white z-30' type='button'><PasteIcon isPasted={isPasted} /></button>
             }
-            <button className='max-[499px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}>{!isUploading ? 'Acortar' : 'Acortando...'}</button>
-            <button className='min-[500px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-4 py-2 rounded-full z-30 disabled:opacity-30' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}><SendIcon /></button>
+            <button className='max-[499px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-8 py-2 rounded-full z-30 disabled:bg-disable' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}>{!isUploading ? 'Acortar' : 'Acortando...'}</button>
+            <button className='min-[500px]:hidden absolute top-[1px] right-[1px] w-fit h-[40px] bg-bckg text-white px-4 py-2 rounded-full z-30 disabled:bg-disable' type='submit' disabled={showModalConfirm || isUploading || isValidateCustomUrl === 'pending'}><SendIcon /></button>
           </div>
         </div>
         {
