@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 
 // Constants
-import { MERCADO_PAGO_API_KEY, TOKEN_PRICE } from '@/constants/constants'
+import { FRONTEND_URL, MERCADO_PAGO_API_KEY, TOKEN_PRICE } from '@/constants/constants'
 
 // Utils
 import { generateSecret } from '@/lib/utils'
@@ -36,9 +36,9 @@ export async function POST (req: Request, res: Response): Promise<NextResponse> 
         }
       ],
       back_urls: {
-        success: 'http://localhost:3000/?paymentStatus=success',
-        failure: 'http://localhost:3000/?paymentStatus=failure',
-        pending: 'http://localhost:3000/?paymentStatus=pending'
+        success: `${FRONTEND_URL}/?paymentStatus=success`,
+        failure: `${FRONTEND_URL}/?paymentStatus=failure`,
+        pending: `${FRONTEND_URL}/?paymentStatus=pending`
       },
       auto_return: 'approved',
       external_reference: externalReference

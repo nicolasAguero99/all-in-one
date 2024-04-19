@@ -26,24 +26,28 @@ export default function PaymentModal ({ paymentStatus }: { paymentStatus: typeof
   return (
     <>
       <div className="w-screen h-screen fixed top-0 left-0 bg-black/30"></div>
-      <div className="w-3/5 h-[250px] fixed top-0 left-0 right-0 bottom-0 m-auto px-4 py-4 rounded-lg shadow-lg bg-white">
+      <div className="w-3/5 h-[250px] flex flex-col justify-center fixed top-0 left-0 right-0 bottom-0 m-auto px-4 py-4 rounded-lg shadow-lg shadow-[#ffffff]/5 bg-bckg z-50">
         {
           isApproved === 'success'
-            ? <>
-                <h4>¡Pago realizado!</h4>
+            ? <div className='flex flex-col gap-4 text-center'>
+                <h4 className='text-2xl text-center'>¡Pago realizado!</h4>
                 {
                   quantity != null
-                    ? <p>Se han acreditado <b>{quantity}</b> tokens</p>
-                    : <p>Se han acreditado tus tokens</p>
+                    ? <p className='text-white/60'>Se han acreditado <b>{quantity}</b> tokens</p>
+                    : <p className='text-white/60'>Se han acreditado tus tokens</p>
                 }
-              </>
-            : <>
-                <h4 className='text-red-600'>¡Pago rechazado!</h4>
-                <p>No se ha podido realizar el pago</p>
-              </>
+              </div>
+            : <div className='flex flex-col gap-4 text-center'>
+                <h4 className='text-2xl text-center'>¡Pago rechazado!</h4>
+                <p className='text-white/60'>No se ha podido realizar el pago</p>
+              </div>
         }
-        <button onClick={handleAccept} className="bg-slate-500 text-white px-4 py-2 rounded-lg">Aceptar</button>
+        <button onClick={handleAccept} className="w-1/2 bg-primary text-bckg font-medium py-2 px-4 mx-auto rounded-lg mt-6">Aceptar</button>
       </div>
     </>
   )
 }
+<div className='flex flex-col gap-4 items-center'>
+  <span className='text-3xl font-semibold'>Iniciar sesión</span>
+  <p className='text-white/60'>Para realizar esta operación debes iniciar sesión y obtener tokens</p>
+</div>

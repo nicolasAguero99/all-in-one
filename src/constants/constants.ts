@@ -4,3 +4,4 @@ export const PAYMENT_STATUS = ['success', 'failure', 'pending'] as const
 export const SERVICES_DATA = [{ name: 'Acortar url', value: 'shortener' }, { name: 'Archivo a url', value: 'file' }, { name: 'Generar QR', value: 'qr' }] as const
 export const TOKEN_PRICE = 100
 export const FILE_TYPES = { IMAGE: 'image', VIDEO: 'video', PDF: 'pdf' } as const
+export const FRONTEND_URL = 'https://all-in-one-sooty.vercel.app'
