@@ -10,14 +10,20 @@ import { type PAYMENT_STATUS } from '@/constants/constants'
 import { getUrls, getUrlsShortenedCookies, getUserDataCookies } from '@/lib/services'
 
 export default async function FilesPage ({ searchParams }: { searchParams: { paymentStatus: typeof PAYMENT_STATUS[number] } }): Promise<JSX.Element> {
-  const { user } = await getUserDataCookies()
-  const urlsFromCookies = await getUrlsShortenedCookies() as Array<{ url: string, longUrl: string }> ?? []
-  const urlsUploaded = user != null ? await getUrls(user?.uid) as Array<{ url: string, longUrl: string }> : []
-  const allUrls = urlsUploaded.concat(urlsFromCookies)
+  // Hacer llamadas en paralelo para mejorar el rendimiento
+  const [{ user, tokens }, urlsFromCookies] = await Promise.all([
+    getUserDataCookies(),
+    getUrlsShortenedCookies()
+  ])
+  
+  const urlsUploaded = user != null ? await getUrls(user.uid) : { error: 'No user found', status: 404 }
+  // @ts-expect-error - urlsUploaded is an array of objects or an object with an error property
+  const allUrls = urlsUploaded?.error == null ? (urlsUploaded as Array<{ url: string, longUrl: string }>).concat(urlsFromCookies) : urlsFromCookies
+  
   return (
-    <MainPage searchParamsValue={searchParams} urlsUploaded={allUrls}>
+    <MainPage searchParamsValue={searchParams} urlsUploaded={allUrls} userData={{ user, tokens }}>
       <PaymentBtn />
-      <SwitchServices />
+      <SwitchServices userData={{ user, tokens }} />
     </MainPage>
   )
 }

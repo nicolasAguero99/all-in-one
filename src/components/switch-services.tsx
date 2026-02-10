@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 // Constants
 import { SERVICES_DATA } from '@/constants/constants'
@@ -9,11 +9,9 @@ import { SERVICES_DATA } from '@/constants/constants'
 // Store
 import { userStore } from '@/store/userStore'
 
-// Services
-import { getTokensByUser, getUserDataCookies } from '@/lib/services'
-
-export default function SwitchServices (): JSX.Element {
+export default function SwitchServices ({ userData }: { userData?: { user: any, tokens: number } }): JSX.Element {
   const router = useRouter()
+  const pathname = usePathname()
   const [currentService, setCurrentService] = useState<typeof SERVICES_DATA[number]['value'] | ''>('')
 
   const handleChangeService = (service: typeof SERVICES_DATA[number]['value']): void => {
@@ -23,25 +21,20 @@ export default function SwitchServices (): JSX.Element {
 
   const { setUser, setTokens } = userStore()
 
+  // Actualizar el servicio actual cuando cambia la ruta
   useEffect(() => {
-    const getCurrentService = window.location.pathname.split('/')[1] as typeof SERVICES_DATA[number]['value'] | ''
-    setCurrentService(getCurrentService)
-  }, [])
-
-  useEffect(() => {
-    const getCurrentService = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] as typeof SERVICES_DATA[number]['value'] : ''
+    const getCurrentService = pathname.split('/')[1] as typeof SERVICES_DATA[number]['value'] | ''
     const serviceCheck = getCurrentService !== '' ? getCurrentService : SERVICES_DATA[0].value
     setCurrentService(serviceCheck)
+  }, [pathname])
 
-    const init = async (): Promise<void> => {
-      const { user } = await getUserDataCookies()
-      if (user == null) return
-      const tokensLength = user != null ? await getTokensByUser(user.uid) : 0
-      setUser(user)
-      setTokens(Number(tokensLength))
+  // Inicializar el store con los datos del servidor (solo una vez)
+  useEffect(() => {
+    if (userData != null) {
+      setUser(userData.user ?? { uid: '', name: '', email: '', photo: '' })
+      setTokens(userData.tokens ?? 0)
     }
-    void init()
-  }, [])
+  }, [userData, setUser, setTokens])
 
   return (
     <div className='my-6 flex justify-center'>

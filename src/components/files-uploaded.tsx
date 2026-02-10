@@ -52,7 +52,7 @@ export default function FilesUploaded ({ files, children }: { files: FileData[],
               <img src="/icons/image-icon.svg" alt="image icon" />
               Archivos recientes
             </h2>
-            <ul className='flex flex-wrap justify-center items-center gap-8 mt-8'>
+            <ul className='flex flex-wrap items-center gap-8 mt-8'>
               {
                 files.length > 0
                   ? files.map(file => {

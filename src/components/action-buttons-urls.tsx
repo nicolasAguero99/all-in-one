@@ -41,21 +41,41 @@ export default function ActionButtonsLink ({ url, setUrl = null, service }: { ur
 
   const handleDelete = async (): Promise<void> => {
     const apiLinkService = isUrlService ? 'urls' : 'qrs'
-    const res = await fetch(`${API_URL}/${apiLinkService}/${url}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ userId: user.uid })
-    })
-    const data = await res.json()
-    if (data.error == null) {
-      showNotification('Link eliminado', 'success')
-      if (setUrl !== null) setUrl('')
-    } else {
-      showNotification('Error al eliminar el link', 'error')
+    const fetchUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? `/api/${apiLinkService}/${url}`
+      : `${API_URL}/${apiLinkService}/${url}`
+
+    try {
+      const res = await fetch(fetchUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId: user.uid })
+      })
+
+      if (!res.ok) {
+        throw new Error(`Error del servidor: ${res.status}`)
+      }
+
+      const data = await res.json()
+      if (data.error == null) {
+        showNotification('Link eliminado', 'success')
+        if (setUrl !== null) setUrl('')
+        // Refrescar para actualizar la lista (sin bloquear la UI)
+        setTimeout(() => {
+          router.refresh()
+        }, 100)
+      } else {
+        showNotification('Error al eliminar el link', 'error')
+      }
+    } catch (error) {
+      console.error('Error al eliminar link:', error)
+      showNotification('Error al eliminar el link. Recargando página...', 'error')
+      setTimeout(() => {
+        router.refresh()
+      }, 2000)
     }
-    router.refresh()
   }
 
   return (

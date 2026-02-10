@@ -7,12 +7,13 @@ import SwitchServices from '@/components/switch-services'
 import { getFilesByUser, getUserDataCookies } from '@/lib/services'
 
 export default async function FilesPage (): Promise<JSX.Element> {
-  const { user } = await getUserDataCookies()
+  const { user, tokens } = await getUserDataCookies()
+  // Solo hacer la llamada si hay usuario
   const data = user !== undefined ? await getFilesByUser(user.uid) : []
   return (
     <FilesUploaded files={data}>
       <PaymentBtn />
-      <SwitchServices />
+      <SwitchServices userData={{ user, tokens }} />
     </FilesUploaded>
   )
 }

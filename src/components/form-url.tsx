@@ -85,24 +85,57 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
     setShowModalConfirm(false)
     setUploading(true)
     const { longUrl } = data
-    const res = await fetch(`${API_URL}/urls`, {
-      method: 'POST',
-      body: JSON.stringify({ longUrl, userId: user.uid, customUrl })
-    })
-    if (res.status === 400) {
-      const { error } = await res.json() as { error: string } ?? { error: 'Ha ocurrido un error' }
-      showNotification(error, 'error')
+
+    // Usar ruta API local en desarrollo para evitar problemas de CORS
+    const fetchUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? '/api/urls'
+      : `${API_URL}/urls`
+
+    try {
+      const res = await fetch(fetchUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ longUrl, userId: user.uid, customUrl })
+      })
+
+      if (res.status === 400) {
+        const { error } = await res.json() as { error: string } ?? { error: 'Ha ocurrido un error' }
+        showNotification(error, 'error')
+        setUploading(false)
+        return
+      }
+
+      if (!res.ok) {
+        throw new Error(`Error del servidor: ${res.status}`)
+      }
+
+      const shortUrl: string = await res.json()
+      if (user.uid === '') {
+        await addUrlsShortenedCookies(shortUrl)
+      }
+      // Actualizar estado local primero para feedback inmediato
+      setUrl(shortUrl)
+      setCurrentLongUrl(longUrl)
       setUploading(false)
-      return
+      showNotification('URL acortada correctamente', 'success')
+      setValue('longUrl', '')
+      setValue('customUrl', '')
+      // Refrescar para obtener la lista actualizada (sin bloquear la UI)
+      setTimeout(() => {
+        router.refresh()
+      }, 100)
+    } catch (error) {
+      console.error('Error al acortar URL:', error)
+      setUploading(false)
+      // Si hay un error de red pero la URL podría haberse creado en el servidor,
+      // refrescamos la página para mostrar la URL si existe
+      showNotification('Error al acortar la URL. Recargando página...', 'error')
+      setTimeout(() => {
+        router.refresh()
+      }, 2000)
     }
-    const shortUrl: string = await res.json()
-    if (user.uid === '') {
-      await addUrlsShortenedCookies(shortUrl)
-    }
-    setUrl(shortUrl)
-    setCurrentLongUrl(longUrl)
-    setUploading(false)
-    router.refresh()
   }
 
   const handleShowModal = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -220,7 +253,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
       </form>
       {
         url !== '' && (
-          <div className='flex flex-col items-center justify-center gap-2 my-8'>
+          <div className='flex flex-col items-center justify-center text-center gap-2 my-8'>
             <span className='text-xl font-semibold'>Nueva URL:</span>
             <Link className='underline text-tertiary' href={`/${url}`} >{currentOrigin}/{url}</Link>
             <small className='text-sm text-tertiary'>({currentLongUrl})</small>
@@ -238,8 +271,8 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
                 {
                   urlsUploaded.map(eachUrl => (
                     <li key={eachUrl.url} className='flex justify-between items-center gap-4 text-tertiary'>
-                      <Link href={`/${eachUrl.url}`} className='text-sm underline w-[320px] whitespace-nowrap overflow-x-hidden text-ellipsis'>{eachUrl.longUrl}</Link>
-                      <small className='text-sm'>/{eachUrl.url}</small>
+                      <a href={`${eachUrl.longUrl}`} target='_blank' rel='noreferrer' className='text-sm underline w-[320px] whitespace-nowrap overflow-x-hidden text-ellipsis'>{eachUrl.longUrl}</a>
+                      <Link href={`/${eachUrl.url}`} target='_blank' rel='noreferrer' className='text-sm underline'>/{eachUrl.url}</Link>
                       <ActionButtonsLink url={eachUrl.url} setUrl={setUrl} service={SERVICES_DATA[0].value} />
                     </li>
                   ))
