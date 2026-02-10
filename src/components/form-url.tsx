@@ -86,7 +86,10 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
     setUploading(true)
     const { longUrl } = data
 
-    const fetchUrl = `${API_URL}/urls`
+    // Usar ruta API local en desarrollo para evitar problemas de CORS
+    const fetchUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? '/api/urls'
+      : `${API_URL}/urls`
 
     try {
       const res = await fetch(fetchUrl, {
@@ -112,17 +115,13 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
       if (user.uid === '') {
         await addUrlsShortenedCookies(shortUrl)
       }
-      // Actualizar estado local primero para feedback inmediato
       setUrl(shortUrl)
       setCurrentLongUrl(longUrl)
       setUploading(false)
+      router.refresh()
       showNotification('URL acortada correctamente', 'success')
       setValue('longUrl', '')
       setValue('customUrl', '')
-      // Refrescar para obtener la lista actualizada (sin bloquear la UI)
-      setTimeout(() => {
-        router.refresh()
-      }, 100)
     } catch (error) {
       console.error('Error al acortar URL:', error)
       setUploading(false)

@@ -7,13 +7,12 @@ import SwitchServices from '@/components/switch-services'
 import { getQrs, getUserDataCookies } from '@/lib/services'
 
 export default async function QrPage (): Promise<JSX.Element> {
-  const { user, tokens } = await getUserDataCookies()
-  // Solo hacer la llamada si hay usuario
-  const qrsUrl = user != null ? await getQrs(user.uid) as Array<{ qr: string, url: string }> : []
+  const { user } = await getUserDataCookies()
+  const qrsUrl = user != null ? await getQrs(user?.uid) as Array<{ qr: string, url: string }> : []
   return (
     <QrForm qrsUrl={qrsUrl}>
       <PaymentBtn />
-      <SwitchServices userData={{ user, tokens }} />
+      <SwitchServices />
     </QrForm>
   )
 }

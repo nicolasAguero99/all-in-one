@@ -325,47 +325,26 @@ export async function getUserDataCookies (): Promise<{ user: UserData, tokens: n
   const cookiesUser = cookies()
   const userData = cookiesUser.get('userData')
   const value = (userData?.value != null && userData?.value !== '') ? userData?.value : undefined
-  
-  if (value === undefined) {
-    return { user: undefined, tokens: 0 }
-  }
-  
-  const user: UserData = JSON.parse(value)
-  // Solo hacer la llamada a getTokensByUser si hay un usuario válido
-  const tokensResult = await getTokensByUser(user.uid as string)
-  // Manejar el caso donde getTokensByUser devuelve un error
-  const tokens = typeof tokensResult === 'number' ? tokensResult : 0
-  return { user, tokens }
+  const tokens = value !== undefined ? await getTokensByUser(JSON.parse(value).uid as string) : 0
+  const user: UserData = value !== undefined ? JSON.parse(value) : undefined
+  return { user, tokens: Number(tokens) }
 }
 
-export async function getUrlsShortenedCookies (): Promise<Array<{ url: string, longUrl: string }>> {
+export async function getUrlsShortenedCookies (): Promise<Array<{ url: string, longUrl: string } | undefined>> {
   const cookiesUrls = cookies()
-  const shortUrlCookie = cookiesUrls.get('shortUrl')
-  
-  // Retornar array vacío inmediatamente si no hay cookies
-  if (shortUrlCookie == null || shortUrlCookie.value === '') {
-    return []
-  }
-  
-  const getUrls: string[] = JSON.parse(shortUrlCookie.value as unknown as string)
-  
-  // Si el array está vacío, retornar inmediatamente
-  if (getUrls.length === 0) {
-    return []
-  }
-  
-  // Usar Promise.all para hacer todas las llamadas en paralelo
-  const allUrls = await Promise.all(getUrls.map(async (eachUrl) => {
-    const urlRef = doc(db, 'urls', eachUrl)
-    const urlSnap = await getDoc(urlRef)
-    if (!urlSnap.exists()) return undefined
-    const data = urlSnap.data()
-    const url = data.url as string
-    return { url: eachUrl, longUrl: url }
-  }))
+  const getUrls: string[] = cookiesUrls.get('shortUrl') != null ? JSON.parse(cookiesUrls.get('shortUrl')?.value as unknown as string) : undefined
+  const allUrls = getUrls !== undefined
+    ? await Promise.all(getUrls.map(async (eachUrl) => {
+      const urlRef = doc(db, 'urls', eachUrl)
+      const urlSnap = await getDoc(urlRef)
+      if (!urlSnap.exists()) return undefined
+      const data = urlSnap.data()
+      const url = data.url as string
+      return { url: eachUrl, longUrl: url }
+    }))
+    : undefined
 
-  // Filtrar undefineds antes de retornar
-  return allUrls.filter((url): url is { url: string, longUrl: string } => url !== undefined)
+  return allUrls as Array<{ url: string, longUrl: string }>
 }
 
 export async function addUrlsShortenedCookies (shortUrl: string): Promise<void> {

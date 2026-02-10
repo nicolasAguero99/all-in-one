@@ -41,7 +41,9 @@ export default function ActionButtonsLink ({ url, setUrl = null, service }: { ur
 
   const handleDelete = async (): Promise<void> => {
     const apiLinkService = isUrlService ? 'urls' : 'qrs'
-    const fetchUrl = `${API_URL}/${apiLinkService}/${url}`
+    const fetchUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+      ? `/api/${apiLinkService}/${url}`
+      : `${API_URL}/${apiLinkService}/${url}`
 
     try {
       const res = await fetch(fetchUrl, {
@@ -60,13 +62,10 @@ export default function ActionButtonsLink ({ url, setUrl = null, service }: { ur
       if (data.error == null) {
         showNotification('Link eliminado', 'success')
         if (setUrl !== null) setUrl('')
-        // Refrescar para actualizar la lista (sin bloquear la UI)
-        setTimeout(() => {
-          router.refresh()
-        }, 100)
       } else {
         showNotification('Error al eliminar el link', 'error')
       }
+      router.refresh()
     } catch (error) {
       console.error('Error al eliminar link:', error)
       showNotification('Error al eliminar el link. Recargando página...', 'error')

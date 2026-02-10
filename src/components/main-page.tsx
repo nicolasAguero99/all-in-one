@@ -10,7 +10,7 @@ import PaymentModal from '@/components/payment-modal'
 import UrlForm from './form-url'
 import RobotError from './robot-error'
 
-export default function MainPage ({ searchParamsValue = null, urlsUploaded, children, userData }: { searchParamsValue: { paymentStatus: typeof PAYMENT_STATUS[number] } | null, urlsUploaded: Array<{ url: string, longUrl: string }> | [], children?: JSX.Element[], userData?: { user: any, tokens: number } }): JSX.Element {
+export default function MainPage ({ searchParamsValue = null, urlsUploaded, children }: { searchParamsValue: { paymentStatus: typeof PAYMENT_STATUS[number] } | null, urlsUploaded: Array<{ url: string, longUrl: string }> | [], children?: JSX.Element[] }): JSX.Element {
   const paymentStatus = searchParamsValue != null ? searchParamsValue.paymentStatus : null
 
   return (
