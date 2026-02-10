@@ -41,9 +41,7 @@ export default function ActionButtonsLink ({ url, setUrl = null, service }: { ur
 
   const handleDelete = async (): Promise<void> => {
     const apiLinkService = isUrlService ? 'urls' : 'qrs'
-    const fetchUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-      ? `/api/${apiLinkService}/${url}`
-      : `${API_URL}/${apiLinkService}/${url}`
+    const fetchUrl = `${API_URL}/${apiLinkService}/${url}`
 
     try {
       const res = await fetch(fetchUrl, {

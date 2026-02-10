@@ -86,10 +86,7 @@ export default function UrlForm ({ urlsUploaded }: { urlsUploaded: Array<{ url: 
     setUploading(true)
     const { longUrl } = data
 
-    // Usar ruta API local en desarrollo para evitar problemas de CORS
-    const fetchUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-      ? '/api/urls'
-      : `${API_URL}/urls`
+    const fetchUrl = `${API_URL}/urls`
 
     try {
       const res = await fetch(fetchUrl, {
